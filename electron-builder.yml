@@ -1,0 +1,12 @@
+appId: com.towind.dupimgfinder
+productName: Dupimg Finder
+copyright: Copyright © 2024 LolipopJ
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - from: .
+    filter:
+      - package.json
+      - app
+publish: null

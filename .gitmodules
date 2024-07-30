@@ -1,0 +1,3 @@
+[submodule "EfficientIR"]
+	path = EfficientIR
+	url = https://github.com/LolipopJ/EfficientIR.git
