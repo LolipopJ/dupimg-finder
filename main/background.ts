@@ -1,6 +1,8 @@
-import path from "path";
-import { app, ipcMain } from "electron";
+import { app, dialog, ipcMain } from "electron";
 import serve from "electron-serve";
+import path from "path";
+
+import { DialogEvents } from "./enums";
 import { createWindow } from "./helpers";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -35,6 +37,6 @@ app.on("window-all-closed", () => {
   app.quit();
 });
 
-ipcMain.on("message", async (event, arg) => {
-  event.reply("message", `${arg} World!`);
+ipcMain.handle(DialogEvents.OPEN_DIRECTORY, async () => {
+  return await dialog.showOpenDialog({ properties: ["openDirectory"] });
 });
