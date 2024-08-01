@@ -8,7 +8,6 @@ module.exports = {
     unoptimized: true,
   },
   webpack: (config) => {
-    // config.target = ["web", "electron-renderer"];
     return config;
   },
   transpilePackages: [

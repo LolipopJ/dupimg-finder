@@ -1,13 +1,23 @@
 import "../styles/globals.css";
 
-import { ConfigProvider } from "antd";
+import {
+  ConfigProvider as AntdConfigProvider,
+  Layout,
+  Menu,
+  type MenuProps,
+} from "antd";
 import type { AppProps } from "next/app";
-import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
 import { Provider } from "react-redux";
 
+import SpawnDialog from "../components/spawnDialog";
 import { refreshIndexRecord } from "../lib/features/indexRecord/indexRecordSlice";
 import { AppStore, makeStore } from "../lib/store";
 import theme from "../themes/themeConfig";
+
+type MenuItem = Required<MenuProps>["items"][number];
 
 function StoreProvider({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore>();
@@ -23,13 +33,59 @@ function StoreProvider({ children }: { children: React.ReactNode }) {
   return <Provider store={storeRef.current}>{children}</Provider>;
 }
 
+const getItem = (
+  label: React.ReactNode,
+  key: React.Key,
+  icon?: React.ReactNode,
+  children?: MenuItem[],
+) => {
+  return {
+    key,
+    icon,
+    children,
+    label,
+  } as MenuItem;
+};
+
+const menuItems: MenuItem[] = [
+  getItem(<Link href="/home">Home</Link>, "/home"),
+  getItem(<Link href="/search">Search</Link>, "/search"),
+];
+
 function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const pathname = router.pathname;
+  const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    setMenuSelectedKeys([
+      String(
+        menuItems.find((menuItem) => String(menuItem.key) === pathname).key,
+      ),
+    ]);
+  }, [pathname]);
+
   return (
-    <ConfigProvider theme={theme}>
+    <AntdConfigProvider theme={theme}>
       <StoreProvider>
-        <Component {...pageProps} />
+        <Layout className="h-screen">
+          <Layout.Sider>
+            <Menu
+              items={menuItems}
+              selectedKeys={menuSelectedKeys}
+              mode="inline"
+              className="h-full"
+            />
+          </Layout.Sider>
+          <Layout className="overflow-auto">
+            <Layout.Content>
+              <Component {...pageProps} />
+            </Layout.Content>
+          </Layout>
+        </Layout>
       </StoreProvider>
-    </ConfigProvider>
+      <SpawnDialog />
+    </AntdConfigProvider>
   );
 }
 

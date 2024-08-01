@@ -1,62 +1,77 @@
-import { execSync } from "child_process";
 import {
   contextBridge,
   ipcRenderer,
-  IpcRendererEvent,
+  type IpcRendererEvent,
   type OpenDialogReturnValue,
 } from "electron";
-import iconv from "iconv-lite";
 import path from "path";
 
-import { IndexRecord } from "../renderer/interfaces";
-import { DialogEvents } from "./enums";
+import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
+import { runExecSync } from "./helpers/child-process";
 
-const handler = {
-  send(channel: string, value: unknown) {
-    ipcRenderer.send(channel, value);
+//#region IPC
+const subscriptions: Record<
+  string,
+  (_event: IpcRendererEvent, ...args: unknown[]) => void
+> = {};
+
+const ipc = {
+  send(channel: string, ...args: unknown[]) {
+    ipcRenderer.send(channel, ...args);
   },
-  on(channel: string, callback: (...args: unknown[]) => void) {
+  on(channel: string, func: (...args: unknown[]) => void, funcKey: string) {
     const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
-      callback(...args);
+      func(...args);
     ipcRenderer.on(channel, subscription);
+    subscriptions[funcKey] = subscription;
 
     return () => {
       ipcRenderer.removeListener(channel, subscription);
     };
   },
+  once(channel: string, func: (...args: unknown[]) => void) {
+    ipcRenderer.once(channel, (_event, ...args) => func(...args));
+  },
+  off(channel: string, funcKey: string) {
+    ipcRenderer.off(channel, subscriptions[funcKey]);
+  },
 };
+//#endregion
 
+//#region Store
+const storeApi = {
+  setValue: (key: string, value: unknown) => {
+    ipcRenderer.send(StoreEvents.SET_VALUE, key, value);
+  },
+  getValue: (key: string) => ipcRenderer.sendSync(StoreEvents.GET_VALUE, key),
+};
+//#endregion
+
+//#region ElectronApi
 const electronApi = {
   selectDirectory: () =>
     ipcRenderer.invoke(
-      DialogEvents.OPEN_DIRECTORY,
+      ElectronEvents.OPEN_DIRECTORY,
     ) as Promise<OpenDialogReturnValue>,
+  openFile: (path: string) =>
+    ipcRenderer.invoke(ElectronEvents.OPEN_FILE, path) as Promise<string>,
 };
+//#endregion
 
+//#region EfficientIRApi
 const efficientIRBinaryPath = path.resolve(
   "EfficientIR/dist/EfficientIR_nogui",
   process.platform === "win32" ? "EfficientIR.exe" : "EfficientIR",
 );
-const execEncoding = process.platform === "win32" ? "cp936" : "utf-8";
-
-const runExecSync = (cmd: string) => {
-  try {
-    const res = execSync(cmd, { encoding: "binary" });
-    return iconv.decode(Buffer.from(res, "binary"), execEncoding);
-  } catch (error) {
-    console.error(error);
-    return "";
-  }
-};
 
 const efficientIRApi = {
-  addIndexDir: (indexDir: IndexRecord["path"][]) => {
+  addIndexDir: (indexDir: string[]) => {
     const execParams = indexDir
       .map((dir) => `--add_index_dir ${dir}`)
       .join(" ");
     runExecSync(`${efficientIRBinaryPath} ${execParams}`);
   },
-  removeIndexDir: (indexDir: IndexRecord["path"][]) => {
+  removeIndexDir: (indexDir: string[]) => {
     const execParams = indexDir
       .map((dir) => `--remove_index_dir ${dir}`)
       .join(" ");
@@ -65,14 +80,49 @@ const efficientIRApi = {
   getIndexDir: () => {
     return JSON.parse(
       runExecSync(`${efficientIRBinaryPath} --get_index_dir`),
-    ) as IndexRecord["path"][];
+    ) as string[];
+  },
+  updateIndex: (indexDir: string[]) => {
+    const args: string[] = [];
+    indexDir.forEach((dir) => {
+      args.push("--update_index_dir");
+      args.push(dir);
+    });
+    ipcRenderer.send(
+      EfficientIREvents.UPDATE_INDEX,
+      efficientIRBinaryPath,
+      args,
+    );
+  },
+  updateAllIndex: () => {
+    ipcRenderer.send(
+      EfficientIREvents.UPDATE_ALL_INDEX,
+      efficientIRBinaryPath,
+      ["--update_index"],
+    );
+  },
+  searchDupImg: (options?: {
+    /** 70 <= threshold <= 100 */
+    threshold?: number;
+    sameDir?: boolean;
+  }) => {
+    const { threshold = 98.5, sameDir = true } = options ?? {};
+    ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG, efficientIRBinaryPath, [
+      "--search_index",
+      "--search_index_similarity_threshold",
+      threshold,
+      sameDir ? "--search_index_same_dir" : "",
+    ]);
   },
 };
+//#endregion
 
-contextBridge.exposeInMainWorld("ipc", handler);
+contextBridge.exposeInMainWorld("ipc", ipc);
+contextBridge.exposeInMainWorld("storeApi", storeApi);
 contextBridge.exposeInMainWorld("electronApi", electronApi);
 contextBridge.exposeInMainWorld("efficientIRApi", efficientIRApi);
 
-export type IpcHandler = typeof handler;
+export type Ipc = typeof ipc;
+export type StoreApi = typeof storeApi;
 export type ElectronApi = typeof electronApi;
 export type EfficientIRApi = typeof efficientIRApi;

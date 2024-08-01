@@ -1,8 +1,14 @@
-import type { EfficientIRApi, ElectronApi, IpcHandler } from "../main/preload";
+import type {
+  EfficientIRApi,
+  ElectronApi,
+  Ipc,
+  StoreApi,
+} from "../main/preload";
 
 declare global {
   interface Window {
-    ipc: IpcHandler;
+    ipc: Ipc;
+    storeApi: StoreApi;
     electronApi: ElectronApi;
     efficientIRApi: EfficientIRApi;
   }
