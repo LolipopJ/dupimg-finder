@@ -10,20 +10,14 @@ import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import { runExecSync } from "./helpers/child-process";
 
 //#region IPC
-const subscriptions: Record<
-  string,
-  (_event: IpcRendererEvent, ...args: unknown[]) => void
-> = {};
-
 const ipc = {
   send(channel: string, ...args: unknown[]) {
     ipcRenderer.send(channel, ...args);
   },
-  on(channel: string, func: (...args: unknown[]) => void, funcKey: string) {
+  on(channel: string, func: (...args: unknown[]) => void) {
     const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
       func(...args);
     ipcRenderer.on(channel, subscription);
-    subscriptions[funcKey] = subscription;
 
     return () => {
       ipcRenderer.removeListener(channel, subscription);
@@ -31,9 +25,6 @@ const ipc = {
   },
   once(channel: string, func: (...args: unknown[]) => void) {
     ipcRenderer.once(channel, (_event, ...args) => func(...args));
-  },
-  off(channel: string, funcKey: string) {
-    ipcRenderer.off(channel, subscriptions[funcKey]);
   },
 };
 //#endregion

@@ -13,7 +13,7 @@ export const SpawnDialog = () => {
   const [dialogContent, setDialogContent] = useState<string>("");
 
   useEffect(() => {
-    window.ipc.on(
+    const cleanupSpawnStarted = window.ipc.on(
       SpawnEvents.SPAWN_STARTED,
       (options: SpawnOptions) => {
         setLoading(true);
@@ -21,9 +21,8 @@ export const SpawnDialog = () => {
         setDialogContent("");
         setOpen(true);
       },
-      "spawnDialog:onSpawnStarted",
     );
-    window.ipc.on(
+    const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
       (data: string, options: SpawnOptions) => {
         if (options.pipe !== "stderr") {
@@ -39,9 +38,8 @@ export const SpawnDialog = () => {
           });
         }
       },
-      "spawnDialog:onReceiveSpawnStdout",
     );
-    window.ipc.on(
+    const cleanupSpawnStderr = window.ipc.on(
       SpawnEvents.SPAWN_STDERR,
       (data: string, options: SpawnOptions) => {
         if (options.pipe !== "stdout") {
@@ -57,9 +55,8 @@ export const SpawnDialog = () => {
           });
         }
       },
-      "spawnDialog:onReceiveSpawnStderr",
     );
-    window.ipc.on(
+    const cleanupSpawnFinished = window.ipc.on(
       SpawnEvents.SPAWN_FINISHED,
       (code: string) => {
         setDialogContent((prevContent) => {
@@ -67,20 +64,13 @@ export const SpawnDialog = () => {
         });
         setLoading(false);
       },
-      "spawnDialog:onSpawnFinished",
     );
 
     return () => {
-      window.ipc.off(SpawnEvents.SPAWN_STARTED, "spawnDialog:onSpawnStarted");
-      window.ipc.off(
-        SpawnEvents.SPAWN_STDOUT,
-        "spawnDialog:onReceiveSpawnStdout",
-      );
-      window.ipc.off(
-        SpawnEvents.SPAWN_STDERR,
-        "spawnDialog:onReceiveSpawnStderr",
-      );
-      window.ipc.off(SpawnEvents.SPAWN_FINISHED, "spawnDialog:onSpawnFinished");
+      cleanupSpawnStarted();
+      cleanupSpawnStdout();
+      cleanupSpawnStderr();
+      cleanupSpawnFinished();
     };
   }, []);
 

@@ -37,7 +37,7 @@ export default function SearchPage() {
   };
 
   useEffect(() => {
-    window.ipc.on(
+    const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
       (data: string, options: SpawnOptions) => {
         if (options.key !== EfficientIREvents.SEARCH_DUP_IMG) return;
@@ -57,21 +57,17 @@ export default function SearchPage() {
 
         setLoading(false);
       },
-      "searchDupImg:onReceiveSpawnStdout",
     );
 
     return () => {
-      window.ipc.off(
-        SpawnEvents.SPAWN_STDOUT,
-        "searchDupImg:onReceiveSpawnStdout",
-      );
+      cleanupSpawnStdout();
     };
   }, [dispatch]);
 
   const onOpenImage = async (path: string) => {
     const error = await window.electronApi.openFile(path);
     if (error) {
-      console.log(`Open file \`${path}\` failed:`, error);
+      console.error(`Open file \`${path}\` failed:`, error);
     }
   };
 

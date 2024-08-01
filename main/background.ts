@@ -69,7 +69,6 @@ const store = new Store();
   });
 
   ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG, (_, binaryPath, args) => {
-    console.log("args", args);
     runSpawn(binaryPath, args, mainWindow, {
       key: EfficientIREvents.SEARCH_DUP_IMG,
       title: "Search duplicate images",
