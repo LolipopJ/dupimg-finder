@@ -1,3 +1,8 @@
+import {
+  FolderAddOutlined,
+  ReloadOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
 import { Button, Popconfirm, Space, Table, type TableColumnsType } from "antd";
 import Head from "next/head";
 import { useState } from "react";
@@ -89,13 +94,21 @@ export default function HomePage() {
       </Head>
       <div>
         <Space className="mb-4 w-full justify-end">
-          <Button onClick={onRefreshIndex}>REFRESH</Button>
-          <Button onClick={onAddIndex}>ADD INDEX</Button>
+          <Button onClick={onRefreshIndex} icon={<ReloadOutlined />}>
+            REFRESH
+          </Button>
+          <Button onClick={onAddIndex} icon={<FolderAddOutlined />}>
+            ADD INDEX
+          </Button>
           <Popconfirm
             title="Confirm to update all index? This may take a long time."
             onConfirm={() => onUpdateIndex()}
           >
-            <Button type="primary" loading={updateIndexRecordLoading}>
+            <Button
+              type="primary"
+              icon={<SyncOutlined />}
+              loading={updateIndexRecordLoading}
+            >
               UPDATE ALL INDEX
             </Button>
           </Popconfirm>

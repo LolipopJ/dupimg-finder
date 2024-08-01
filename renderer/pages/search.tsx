@@ -1,3 +1,4 @@
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Checkbox,
@@ -144,7 +145,12 @@ export default function SearchPage() {
             addonAfter="%"
             disabled={loading}
           />
-          <Button type="primary" onClick={onSearchDupImg} loading={loading}>
+          <Button
+            type="primary"
+            onClick={onSearchDupImg}
+            icon={<SearchOutlined />}
+            loading={loading}
+          >
             START SEARCH
           </Button>
         </Space>
