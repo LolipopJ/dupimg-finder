@@ -115,6 +115,7 @@ export default function SearchPage() {
           {Number(value).toFixed(2)} <small>%</small>
         </span>
       ),
+      defaultSortOrder: "descend",
       sorter: (a, b) => a.sim - b.sim,
     },
   ];
@@ -125,12 +126,12 @@ export default function SearchPage() {
         <title>Search Duplicate Images - Dupimg Finder</title>
       </Head>
       <div>
-        <Space>
+        <Space className="mb-4 w-full justify-end">
           <Checkbox
             checked={sameDir}
             onChange={(e) => setSameDir(e.target.checked)}
           >
-            COMPARE IMAGES OF SAME DIR
+            Compare images of same directory
           </Checkbox>
           <InputNumber
             value={threshold}

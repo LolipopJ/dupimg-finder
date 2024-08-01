@@ -73,12 +73,13 @@ function App({ Component, pageProps }: AppProps) {
             <Menu
               items={menuItems}
               selectedKeys={menuSelectedKeys}
+              theme="dark"
               mode="inline"
               className="h-full"
             />
           </Layout.Sider>
           <Layout className="overflow-auto">
-            <Layout.Content>
+            <Layout.Content className="p-6">
               <Component {...pageProps} />
             </Layout.Content>
           </Layout>

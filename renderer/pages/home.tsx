@@ -88,7 +88,7 @@ export default function HomePage() {
         <title>Home - Dupimg Finder</title>
       </Head>
       <div>
-        <Space>
+        <Space className="mb-4 w-full justify-end">
           <Button onClick={onRefreshIndex}>REFRESH</Button>
           <Button onClick={onAddIndex}>ADD INDEX</Button>
           <Popconfirm
