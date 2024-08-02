@@ -44,10 +44,10 @@ const getItem = (
     icon,
     children,
     label,
-  } as MenuItem;
+  } as NonNullable<MenuItem>;
 };
 
-const menuItems: MenuItem[] = [
+const menuItems = [
   getItem(<Link href="/home">Home</Link>, "/home"),
   getItem(<Link href="/search">Search</Link>, "/search"),
 ];

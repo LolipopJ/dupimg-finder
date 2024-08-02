@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain, shell } from "electron";
+import { app, dialog, ipcMain, net, protocol, shell } from "electron";
 import serve from "electron-serve";
 import Store from "electron-store";
 import path from "path";
@@ -7,18 +7,40 @@ import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import { createWindow } from "./helpers";
 import { runSpawn } from "./helpers/child-process";
 
-const isProd = process.env.NODE_ENV === "production";
+const store = new Store();
 
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "media",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true,
+      stream: true,
+    },
+  },
+]);
+
+const isProd = process.env.NODE_ENV === "production";
 if (isProd) {
   serve({ directory: "app" });
 } else {
   app.setPath("userData", `${app.getPath("userData")} (development)`);
 }
 
-const store = new Store();
-
 (async () => {
   await app.whenReady();
+
+  //#region custom protocols
+  protocol.handle("media", (request) => {
+    let mediaPath = request.url.slice("media://".length);
+    if (process.platform === "win32") {
+      mediaPath = mediaPath.replace("/", ":/");
+    }
+    return net.fetch(mediaPath);
+  });
+  //#endregion
 
   const mainWindow = createWindow("main", {
     width: 1000,
@@ -36,6 +58,13 @@ const store = new Store();
     mainWindow.webContents.openDevTools();
   }
 
+  //#region app events
+  app.on("window-all-closed", () => {
+    app.quit();
+  });
+  //#endregion
+
+  //#region ipcMain events
   ipcMain.on(StoreEvents.SET_VALUE, (_, key, value) => {
     store.set(key, value);
   });
@@ -75,8 +104,5 @@ const store = new Store();
       pipe: "stderr",
     });
   });
+  //#endregion
 })();
-
-app.on("window-all-closed", () => {
-  app.quit();
-});

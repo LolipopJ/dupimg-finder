@@ -7,6 +7,7 @@ import {
 import {
   Button,
   Checkbox,
+  Image,
   InputNumber,
   Space,
   Table,
@@ -35,6 +36,9 @@ export default function SearchPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [threshold, setThreshold] = useState<number>(DEFAULT_THRESHOLD);
   const [sameDir, setSameDir] = useState<boolean>(true);
+  const [dupCheckResExpandedRowKeys, setDupCheckResExpandedRowKeys] = useState<
+    string[]
+  >([]);
 
   const dupCheckRes = useAppSelector((state) => state.dupCheckRes.value);
   const dispatch = useAppDispatch();
@@ -87,6 +91,7 @@ export default function SearchPage() {
       dispatch(
         updateDupCheckResFileStats({ path, stats: { isDeleted: true } }),
       );
+      window.nodeApi.updateFileStatsCache(path, null);
     }
     return error;
   };
@@ -114,9 +119,9 @@ export default function SearchPage() {
       <div>
         <a
           className={`block ${isDeleted ? "!line-through" : ""}`}
-          href={value}
+          data-path={value}
           onClick={(e) => {
-            e.preventDefault();
+            e.stopPropagation();
             e.currentTarget.classList.add("link--visited");
             onOpenImage(value);
           }}
@@ -143,6 +148,18 @@ export default function SearchPage() {
           </Space>
         </div>
       </div>
+    );
+  };
+
+  const renderImagePreview = (path: string) => {
+    return (
+      <Image
+        src={`media://${path}`}
+        alt={path}
+        className="cursor-pointer rounded-md"
+        preview={false}
+        onClick={() => onOpenImage(path)}
+      />
     );
   };
 
@@ -209,14 +226,35 @@ export default function SearchPage() {
         <Table
           columns={dupCheckResTableColumns}
           dataSource={dupCheckRes}
+          loading={loading}
           rowKey="key"
           scroll={{ x: true }}
+          expandable={{
+            expandedRowKeys: dupCheckResExpandedRowKeys,
+            expandRowByClick: true,
+            onExpand: (expanded, record) => {
+              if (expanded) {
+                setDupCheckResExpandedRowKeys([record.key]);
+              } else {
+                setDupCheckResExpandedRowKeys([]);
+              }
+            },
+            expandedRowRender: (record) => {
+              return (
+                <Space>
+                  {renderImagePreview(record.path_a)}
+                  {renderImagePreview(record.path_b)}
+                </Space>
+              );
+            },
+            rowExpandable: (record) =>
+              !record.fileA.isDeleted && !record.fileB.isDeleted,
+          }}
           pagination={{
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50, 100],
             defaultPageSize: 20,
           }}
-          loading={loading}
         />
       </div>
     </>

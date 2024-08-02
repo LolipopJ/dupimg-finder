@@ -40,7 +40,7 @@ const storeApi = {
 //#endregion
 
 //#region
-const fileStatsCache: Record<string, Stats> = {};
+const fileStatsCache: Record<string, Stats | null> = {};
 
 const nodeApi = {
   getFilesStats: (paths: string[]): (Stats | null)[] => {
@@ -59,6 +59,9 @@ const nodeApi = {
         return null;
       }
     });
+  },
+  updateFileStatsCache: (path: string, stats: Stats | null) => {
+    fileStatsCache[path] = stats;
   },
 };
 //#endregion
