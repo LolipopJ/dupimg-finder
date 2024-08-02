@@ -30,7 +30,7 @@ Python environment is required and `pyinstaller` has been installed.
 
 ```bash
 cd EfficientIR
-git submodule update --init --recursive
+git submodule update --init
 
 # build passed with `python==3.12.4` and `pyinstaller==6.9.0`
 pyinstaller build_nogui.spec
