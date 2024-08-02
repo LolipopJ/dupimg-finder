@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "dupimg-finder",
-  "description": "",
+  "description": "A tool to find duplicate images in your file system.",
   "version": "0.1.0",
   "repository": "https://github.com/LolipopJ/dupimg-finder.git",
   "author": "LolipopJ <42314340+LolipopJ@users.noreply.github.com>",
@@ -10,6 +10,11 @@
   "scripts": {
     "dev": "nextron",
     "build": "nextron build",
+    "build:mac": "nextron build --mac",
+    "build:mac:universal": "nextron build --mac --universal",
+    "build:linux": "nextron build --linux",
+    "build:win32": "nextron build --win --ia32",
+    "build:win64": "nextron build --win --x64",
     "lint": "eslint . --ignore-path .gitignore",
     "postinstall": "electron-builder install-app-deps"
   },

@@ -1,12 +1,22 @@
-appId: com.towind.dupimgfinder
-productName: Dupimg Finder
-copyright: Copyright © 2024 LolipopJ
+appId: github.com/LolipopJ/dupimg-finder
+productName: DupimgFinder
+copyright: MIT © 2024 LolipopJ
 directories:
   output: dist
   buildResources: resources
+asar: true
 files:
   - from: .
     filter:
       - package.json
       - app
+extraResources:
+  - from: EfficientIR/dist/EfficientIR_nogui
+    to: ../EfficientIR/dist/EfficientIR_nogui
+win:
+  target:
+    - nsis
+    - zip
+nsis:
+  oneClick: false
 publish: null
