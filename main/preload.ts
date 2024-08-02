@@ -4,6 +4,7 @@ import {
   type IpcRendererEvent,
   type OpenDialogReturnValue,
 } from "electron";
+import fs from "fs";
 import path from "path";
 
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
@@ -35,6 +36,14 @@ const storeApi = {
     ipcRenderer.send(StoreEvents.SET_VALUE, key, value);
   },
   getValue: (key: string) => ipcRenderer.sendSync(StoreEvents.GET_VALUE, key),
+};
+//#endregion
+
+//#region
+const nodeApi = {
+  getFilesStats: (paths: string[]) => {
+    return paths.map((path) => fs.statSync(path));
+  },
 };
 //#endregion
 
@@ -110,10 +119,12 @@ const efficientIRApi = {
 
 contextBridge.exposeInMainWorld("ipc", ipc);
 contextBridge.exposeInMainWorld("storeApi", storeApi);
+contextBridge.exposeInMainWorld("nodeApi", nodeApi);
 contextBridge.exposeInMainWorld("electronApi", electronApi);
 contextBridge.exposeInMainWorld("efficientIRApi", efficientIRApi);
 
 export type Ipc = typeof ipc;
 export type StoreApi = typeof storeApi;
+export type NodeApi = typeof nodeApi;
 export type ElectronApi = typeof electronApi;
 export type EfficientIRApi = typeof efficientIRApi;

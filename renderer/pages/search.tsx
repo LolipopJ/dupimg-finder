@@ -1,4 +1,8 @@
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  ClockCircleOutlined,
+  FileImageOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Checkbox,
@@ -7,6 +11,7 @@ import {
   Table,
   type TableColumnsType,
   type TableColumnType,
+  Tooltip,
 } from "antd";
 import Head from "next/head";
 import { useEffect, useState } from "react";
@@ -17,10 +22,7 @@ import type {
   DupCheckResRecord,
   SpawnOptions,
 } from "../interfaces";
-import {
-  setDupCheckResValue,
-  updateDupCheckResRecord,
-} from "../lib/features/dupCheck/dupCheckResSlice";
+import { setDupCheckResValue } from "../lib/features/dupCheck/dupCheckResSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
 
 export default function SearchPage() {
@@ -45,8 +47,14 @@ export default function SearchPage() {
         try {
           const parsedRes: DupCheckRes[] = JSON.parse(data);
           const parsedResRecord: DupCheckResRecord[] = parsedRes.map((res) => {
+            const [fileA, fileB] = window.nodeApi.getFilesStats([
+              res.path_a,
+              res.path_b,
+            ]);
             return {
               ...res,
+              fileA,
+              fileB,
               key: `${res.path_a}-${res.path_b}`,
             };
           });
@@ -75,17 +83,33 @@ export default function SearchPage() {
     value,
     record,
   ) => {
-    // const isPathA = value === record.path_a;
-    // const [currentFileStat, otherFileStat] = isPathA
-    //   ? [record.fileA, record.fileB]
-    //   : [record.fileB, record.fileA];
-    // const isOlder = currentFileStat.birthtimeMs < otherFileStat.birthtimeMs;
-    // const isBigger = currentFileStat.size > otherFileStat.size;
+    const isPathA = value === record.path_a;
+    const [currentFileStat, otherFileStat] = isPathA
+      ? [record.fileA, record.fileB]
+      : [record.fileB, record.fileA];
+
+    const isEarlier = currentFileStat.birthtime < otherFileStat.birthtime;
+    const isLarger = currentFileStat.size > otherFileStat.size;
+
     return (
       <div>
-        <a onClick={() => onOpenImage(value)}>{value}</a>
-        {/* {isOlder ? <small>older</small> : null}
-        {isBigger ? <small>bigger</small> : null} */}
+        <a className="block" onClick={() => onOpenImage(value)}>
+          {value}
+        </a>
+        <div className="mt-1 select-none">
+          <Space>
+            {isEarlier ? (
+              <Tooltip title="This image file was created earlier">
+                <ClockCircleOutlined /> Earlier
+              </Tooltip>
+            ) : null}
+            {isLarger ? (
+              <Tooltip title="This image file's size is larger">
+                <FileImageOutlined /> Larger
+              </Tooltip>
+            ) : null}
+          </Space>
+        </div>
       </div>
     );
   };
@@ -155,6 +179,11 @@ export default function SearchPage() {
           dataSource={dupCheckRes}
           rowKey="key"
           scroll={{ x: true }}
+          pagination={{
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50, 100],
+            defaultPageSize: 20,
+          }}
           loading={loading}
         />
       </div>

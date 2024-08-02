@@ -10,5 +10,4 @@ export interface DupCheckResRecord extends DupCheckRes {
   key: string;
   fileA: Stats;
   fileB: Stats;
-  isDeleted: boolean;
 }
