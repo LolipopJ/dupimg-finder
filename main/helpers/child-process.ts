@@ -45,6 +45,6 @@ export const runSpawn = (
   });
 
   process.on("close", (code) => {
-    browserWindow.webContents.send(SpawnEvents.SPAWN_FINISHED, code);
+    browserWindow.webContents.send(SpawnEvents.SPAWN_FINISHED, code ?? 0);
   });
 };

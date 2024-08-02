@@ -9,11 +9,32 @@
 }
 
 @layer components {
-  .a-visited {
+  .link--visited {
     @apply text-violet-900;
 
     &:hover {
       @apply text-violet-600;
+    }
+  }
+
+  .spawn-modal {
+    .ant-modal-content,
+    .ant-modal-header {
+      @apply transition-colors;
+    }
+  }
+
+  .spawn-modal--error {
+    .ant-modal-content,
+    .ant-modal-header {
+      @apply !bg-red-50;
+    }
+  }
+
+  .spawn-modal--success {
+    .ant-modal-content,
+    .ant-modal-header {
+      @apply !bg-green-50;
     }
   }
 }

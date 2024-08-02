@@ -14,7 +14,7 @@ Generate eigenvalues for approximately 50,000 images (≈ 170GB) takes:
 
 | Image Processing Model | Device Type | Device Model | Time Consuming |
 | ---------------------- | ----------- | ------------ | -------------- |
-| `EfficientNet-B2`      | CPU         | `i5-12600KF` | 85min          |
+| `EfficientNet-B2`      | CPU         | `i5-12600KF` | 90min          |
 
 ## Developer
 

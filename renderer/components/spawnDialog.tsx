@@ -1,3 +1,8 @@
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import { Modal } from "antd";
 import { useEffect, useState } from "react";
 
@@ -9,14 +14,17 @@ const SPAWN_LOG_MAX_LENGTH = 2000;
 export const SpawnDialog = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
   const [dialogTitle, setDialogTitle] = useState<string>("Spawn log");
   const [dialogContent, setDialogContent] = useState<string>("");
 
   useEffect(() => {
     const cleanupSpawnStarted = window.ipc.on(
       SpawnEvents.SPAWN_STARTED,
+      // @ts-expect-error: override using defined types
       (options: SpawnOptions) => {
         setLoading(true);
+        setError(false);
         setDialogTitle(options.title);
         setDialogContent("");
         setOpen(true);
@@ -24,6 +32,7 @@ export const SpawnDialog = () => {
     );
     const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
+      // @ts-expect-error: override using defined types
       (data: string, options: SpawnOptions) => {
         if (options.pipe !== "stderr") {
           setDialogContent((prevContent) => {
@@ -41,6 +50,7 @@ export const SpawnDialog = () => {
     );
     const cleanupSpawnStderr = window.ipc.on(
       SpawnEvents.SPAWN_STDERR,
+      // @ts-expect-error: override using defined types
       (data: string, options: SpawnOptions) => {
         if (options.pipe !== "stdout") {
           setDialogContent((prevContent) => {
@@ -58,10 +68,12 @@ export const SpawnDialog = () => {
     );
     const cleanupSpawnFinished = window.ipc.on(
       SpawnEvents.SPAWN_FINISHED,
-      (code: string) => {
+      // @ts-expect-error: override using defined types
+      (code: number) => {
         setDialogContent((prevContent) => {
           return `Spawn closed with code: ${code}` + "\n" + prevContent;
         });
+        if (code !== 0) setError(true);
         setLoading(false);
       },
     );
@@ -82,8 +94,24 @@ export const SpawnDialog = () => {
 
   return (
     <Modal
+      title={
+        <span
+          className={`${loading ? "" : error ? "text-red-600" : "text-green-600"}`}
+        >
+          <span className="mr-2">
+            {loading ? (
+              <LoadingOutlined />
+            ) : error ? (
+              <CloseCircleOutlined />
+            ) : (
+              <CheckCircleOutlined />
+            )}
+          </span>
+          {dialogTitle}
+        </span>
+      }
+      className={`spawn-modal ${loading ? "" : error ? "spawn-modal--error" : "spawn-modal--success"}`}
       open={open}
-      title={dialogTitle}
       closable={!loading}
       maskClosable={!loading}
       onCancel={onClose}

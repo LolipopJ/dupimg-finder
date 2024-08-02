@@ -42,7 +42,7 @@ export default function SearchPage() {
   useEffect(() => {
     const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
-      // @ts-expect-error: override defined types
+      // @ts-expect-error: override using defined types
       (data: string, options: SpawnOptions) => {
         if (options.key !== EfficientIREvents.SEARCH_DUP_IMG) return;
 
@@ -117,7 +117,7 @@ export default function SearchPage() {
           href={value}
           onClick={(e) => {
             e.preventDefault();
-            e.currentTarget.classList.add("a-visited");
+            e.currentTarget.classList.add("link--visited");
             onOpenImage(value);
           }}
         >
