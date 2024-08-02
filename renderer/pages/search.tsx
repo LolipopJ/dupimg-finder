@@ -2,6 +2,7 @@ import {
   ClockCircleOutlined,
   FileImageOutlined,
   SearchOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -22,25 +23,26 @@ import type {
   DupCheckResRecord,
   SpawnOptions,
 } from "../interfaces";
-import { setDupCheckResValue } from "../lib/features/dupCheck/dupCheckResSlice";
+import {
+  setDupCheckResValue,
+  updateDupCheckResFileStats,
+} from "../lib/features/dupCheck/dupCheckResSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
+
+const DEFAULT_THRESHOLD = 98.5;
 
 export default function SearchPage() {
   const [loading, setLoading] = useState<boolean>(false);
-  const [threshold, setThreshold] = useState<number>(98.5);
+  const [threshold, setThreshold] = useState<number>(DEFAULT_THRESHOLD);
   const [sameDir, setSameDir] = useState<boolean>(true);
 
   const dupCheckRes = useAppSelector((state) => state.dupCheckRes.value);
   const dispatch = useAppDispatch();
 
-  const onSearchDupImg = () => {
-    setLoading(true);
-    window.efficientIRApi.searchDupImg({ threshold, sameDir });
-  };
-
   useEffect(() => {
     const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
+      // @ts-expect-error: override defined types
       (data: string, options: SpawnOptions) => {
         if (options.key !== EfficientIREvents.SEARCH_DUP_IMG) return;
 
@@ -53,8 +55,8 @@ export default function SearchPage() {
             ]);
             return {
               ...res,
-              fileA,
-              fileB,
+              fileA: fileA ? fileA : { isDeleted: true },
+              fileB: fileB ? fileB : { isDeleted: true },
               key: `${res.path_a}-${res.path_b}`,
             };
           });
@@ -72,11 +74,21 @@ export default function SearchPage() {
     };
   }, [dispatch]);
 
+  const onSearchDupImg = () => {
+    setLoading(true);
+    window.efficientIRApi.searchDupImg({ threshold, sameDir });
+  };
+
   const onOpenImage = async (path: string) => {
     const error = await window.electronApi.openFile(path);
     if (error) {
       console.error(`Open file \`${path}\` failed:`, error);
+
+      dispatch(
+        updateDupCheckResFileStats({ path, stats: { isDeleted: true } }),
+      );
     }
+    return error;
   };
 
   const renderImagePath: TableColumnType<DupCheckResRecord>["render"] = (
@@ -88,13 +100,20 @@ export default function SearchPage() {
       ? [record.fileA, record.fileB]
       : [record.fileB, record.fileA];
 
-    const isEarlier = currentFileStat.birthtime < otherFileStat.birthtime;
-    const isLarger = currentFileStat.size > otherFileStat.size;
+    const isDeleted = currentFileStat.isDeleted;
+    const isEarlier =
+      currentFileStat.birthtime && otherFileStat.birthtime
+        ? currentFileStat.birthtime < otherFileStat.birthtime
+        : false;
+    const isLarger =
+      currentFileStat.size && otherFileStat.size
+        ? currentFileStat.size > otherFileStat.size
+        : false;
 
     return (
       <div>
         <a
-          className="block"
+          className={`block ${isDeleted ? "!line-through" : ""}`}
           href={value}
           onClick={(e) => {
             e.preventDefault();
@@ -106,6 +125,11 @@ export default function SearchPage() {
         </a>
         <div className="mt-1 select-none">
           <Space>
+            {isDeleted ? (
+              <Tooltip title="Unable to fetch this image file, please consider updating index">
+                <WarningOutlined /> Outdated
+              </Tooltip>
+            ) : null}
             {isEarlier ? (
               <Tooltip title="This image file was created earlier">
                 <ClockCircleOutlined /> Earlier
@@ -164,7 +188,7 @@ export default function SearchPage() {
           </Checkbox>
           <InputNumber
             value={threshold}
-            onChange={(v) => setThreshold(v)}
+            onChange={(v) => setThreshold(v ?? DEFAULT_THRESHOLD)}
             min={70}
             max={100}
             step={0.1}

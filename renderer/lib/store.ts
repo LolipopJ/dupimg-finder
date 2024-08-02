@@ -9,6 +9,8 @@ export const makeStore = () =>
       indexRecord: indexRecordSlice,
       dupCheckRes: dupCheckResSlice,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({ serializableCheck: false }),
   });
 
 // Infer the type of makeStore

@@ -11,5 +11,9 @@
 @layer components {
   .a-visited {
     @apply text-violet-900;
+
+    &:hover {
+      @apply text-violet-600;
+    }
   }
 }

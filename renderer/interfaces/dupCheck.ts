@@ -6,8 +6,12 @@ export interface DupCheckRes {
   sim: number;
 }
 
+export interface FileStats extends Partial<Stats> {
+  isDeleted?: boolean;
+}
+
 export interface DupCheckResRecord extends DupCheckRes {
   key: string;
-  fileA: Stats;
-  fileB: Stats;
+  fileA: FileStats;
+  fileB: FileStats;
 }

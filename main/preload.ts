@@ -4,7 +4,7 @@ import {
   type IpcRendererEvent,
   type OpenDialogReturnValue,
 } from "electron";
-import fs from "fs";
+import fs, { type Stats } from "fs";
 import path from "path";
 
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
@@ -41,8 +41,15 @@ const storeApi = {
 
 //#region
 const nodeApi = {
-  getFilesStats: (paths: string[]) => {
-    return paths.map((path) => fs.statSync(path));
+  getFilesStats: (paths: string[]): (Stats | null)[] => {
+    return paths.map((path) => {
+      try {
+        return fs.statSync(path);
+      } catch (error) {
+        console.warn(`Get stats of file \`${path}\` failed:`, error);
+        return null;
+      }
+    });
   },
 };
 //#endregion

@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { merge } from "lodash";
 
-import { DupCheckResRecord } from "../../../interfaces";
+import { DupCheckResRecord, FileStats } from "../../../interfaces";
 import { type RootState } from "../../store";
 
 export interface IndexRecordState {
@@ -19,21 +20,20 @@ export const dupCheckResSlice = createSlice({
     ) => {
       state.value = action.payload;
     },
-    updateDupCheckResRecord: (
+    updateDupCheckResFileStats: (
       state,
-      action: PayloadAction<DupCheckResRecord>,
+      action: PayloadAction<{ path: string; stats: Partial<FileStats> }>,
     ) => {
-      const targetRecordIndex = state.value.findIndex(
-        (record) =>
-          record.path_a === action.payload.path_a &&
-          record.path_b === action.payload.path_b,
-      );
-      state.value[targetRecordIndex] = action.payload;
+      const { path, stats } = action.payload;
+      for (const record of state.value) {
+        if (record.path_a === path) merge(record.fileA, stats);
+        if (record.path_b === path) merge(record.fileB, stats);
+      }
     },
   },
 });
 
-export const { setDupCheckResValue, updateDupCheckResRecord } =
+export const { setDupCheckResValue, updateDupCheckResFileStats } =
   dupCheckResSlice.actions;
 
 export const dupCheckRes = (state: RootState) => state.dupCheckRes.value;
