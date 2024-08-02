@@ -4,6 +4,8 @@ Based on [EfficientIR](https://github.com/Sg4Dylan/EfficientIR).
 
 ## Usage
 
+![search-duplicate-images](./docs/search-duplicate-images.png)
+
 1. Add index paths where contain images.
 2. Update index to generate the eigenvalues of images.
 3. Search duplicate images using generated eigenvalues.
