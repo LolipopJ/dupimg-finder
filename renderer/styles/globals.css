@@ -9,4 +9,7 @@
 }
 
 @layer components {
+  .a-visited {
+    @apply text-violet-900;
+  }
 }

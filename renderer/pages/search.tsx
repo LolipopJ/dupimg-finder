@@ -93,7 +93,15 @@ export default function SearchPage() {
 
     return (
       <div>
-        <a className="block" onClick={() => onOpenImage(value)}>
+        <a
+          className="block"
+          href={value}
+          onClick={(e) => {
+            e.preventDefault();
+            e.currentTarget.classList.add("a-visited");
+            onOpenImage(value);
+          }}
+        >
           {value}
         </a>
         <div className="mt-1 select-none">

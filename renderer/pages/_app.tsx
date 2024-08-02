@@ -60,7 +60,7 @@ function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     setMenuSelectedKeys([
       String(
-        menuItems.find((menuItem) => String(menuItem.key) === pathname).key,
+        menuItems.find((menuItem) => String(menuItem.key) === pathname)?.key,
       ),
     ]);
   }, [pathname]);
