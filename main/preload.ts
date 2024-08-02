@@ -40,11 +40,20 @@ const storeApi = {
 //#endregion
 
 //#region
+const fileStatsCache: Record<string, Stats> = {};
+
 const nodeApi = {
   getFilesStats: (paths: string[]): (Stats | null)[] => {
     return paths.map((path) => {
       try {
-        return fs.statSync(path);
+        if (fileStatsCache[path]) {
+          return fileStatsCache[path];
+        }
+
+        const fileStats = fs.statSync(path);
+        fileStatsCache[path] = fileStats;
+
+        return fileStats;
       } catch (error) {
         console.warn(`Get stats of file \`${path}\` failed:`, error);
         return null;
