@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import dupCheckResSlice from "./features/dupCheck/dupCheckResSlice";
 import indexRecordSlice from "./features/indexRecord/indexRecordSlice";
+import searchDupResSlice from "./features/searchDup/searchDupResSlice";
 
 export const makeStore = () =>
   configureStore({
     reducer: {
       indexRecord: indexRecordSlice,
       dupCheckRes: dupCheckResSlice,
+      searchDupRes: searchDupResSlice,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({ serializableCheck: false }),

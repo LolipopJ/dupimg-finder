@@ -50,6 +50,7 @@ const getItem = (
 const menuItems = [
   getItem(<Link href="/home">Home</Link>, "/home"),
   getItem(<Link href="/search">Search</Link>, "/search"),
+  getItem(<Link href="/search-target">Search Target</Link>, "/search-target"),
 ];
 
 function App({ Component, pageProps }: AppProps) {

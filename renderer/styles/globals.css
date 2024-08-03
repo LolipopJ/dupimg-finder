@@ -37,4 +37,10 @@
       @apply !bg-green-50;
     }
   }
+
+  .preview-image-card {
+    .ant-popover-inner {
+      @apply max-w-80;
+    }
+  }
 }

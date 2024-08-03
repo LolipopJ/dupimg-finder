@@ -4,7 +4,8 @@ export enum StoreEvents {
 }
 
 export enum ElectronEvents {
-  OPEN_DIRECTORY = "electron:openDirectory",
+  SELECT_DIRECTORY = "electron:selectDirectory",
+  SELECT_IMAGE = "electron:selectImage",
   OPEN_FILE = "electron:openFile",
 }
 
@@ -12,6 +13,7 @@ export enum EfficientIREvents {
   UPDATE_INDEX = "efficientIR:updateIndex",
   UPDATE_ALL_INDEX = "efficientIR:updateAllIndex",
   SEARCH_DUP_IMG = "efficientIR:searchDupImg",
+  SEARCH_DUP_IMG_OF_TARGET = "efficientIR:searchDupImgOfTarget",
 }
 
 export enum SpawnEvents {

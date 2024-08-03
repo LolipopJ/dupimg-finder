@@ -70,7 +70,11 @@ const nodeApi = {
 const electronApi = {
   selectDirectory: () =>
     ipcRenderer.invoke(
-      ElectronEvents.OPEN_DIRECTORY,
+      ElectronEvents.SELECT_DIRECTORY,
+    ) as Promise<OpenDialogReturnValue>,
+  selectImage: () =>
+    ipcRenderer.invoke(
+      ElectronEvents.SELECT_IMAGE,
     ) as Promise<OpenDialogReturnValue>,
   openFile: (path: string) =>
     ipcRenderer.invoke(ElectronEvents.OPEN_FILE, path) as Promise<string>,
@@ -128,10 +132,23 @@ const efficientIRApi = {
     const { threshold = 98.5, sameDir = true } = options ?? {};
     ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG, efficientIRBinaryPath, [
       "--search_index",
-      "--search_index_similarity_threshold",
+      "--similarity_threshold",
       threshold,
-      sameDir ? "--search_index_same_dir" : "",
+      ...(sameDir ? ["--same_dir"] : []),
     ]);
+  },
+  searchDupImgOfTarget: (
+    path: string,
+    options?: {
+      matchN?: number;
+    },
+  ) => {
+    const { matchN } = options ?? {};
+    ipcRenderer.send(
+      EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
+      efficientIRBinaryPath,
+      ["--search_target", path, ...(matchN ? ["--match_n", matchN] : [])],
+    );
   },
 };
 //#endregion

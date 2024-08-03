@@ -3,6 +3,7 @@ import serve from "electron-serve";
 import Store from "electron-store";
 import path from "path";
 
+import { IMAGE_EXTENSIONS } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import { createWindow } from "./helpers";
 import { runSpawn } from "./helpers/child-process";
@@ -73,8 +74,15 @@ if (isProd) {
     event.returnValue = store.get(key);
   });
 
-  ipcMain.handle(ElectronEvents.OPEN_DIRECTORY, async () => {
+  ipcMain.handle(ElectronEvents.SELECT_DIRECTORY, async () => {
     return await dialog.showOpenDialog({ properties: ["openDirectory"] });
+  });
+
+  ipcMain.handle(ElectronEvents.SELECT_IMAGE, async () => {
+    return await dialog.showOpenDialog({
+      properties: ["openFile"],
+      filters: [{ name: "images", extensions: IMAGE_EXTENSIONS }],
+    });
   });
 
   ipcMain.handle(ElectronEvents.OPEN_FILE, async (_, path) => {
@@ -104,5 +112,16 @@ if (isProd) {
       pipe: "stderr",
     });
   });
+
+  ipcMain.on(
+    EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
+    (_, binaryPath, args) => {
+      runSpawn(binaryPath, args, mainWindow, {
+        key: EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
+        title: "Search duplicate images of target",
+        pipe: "stderr",
+      });
+    },
+  );
   //#endregion
 })();
