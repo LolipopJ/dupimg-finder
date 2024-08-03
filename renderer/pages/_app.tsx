@@ -12,7 +12,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { Provider } from "react-redux";
 
-import SpawnDialog from "../components/spawnDialog";
+import SpawnDialog from "../components/spawn-dialog";
 import { refreshIndexRecord } from "../lib/features/indexRecord/indexRecordSlice";
 import { AppStore, makeStore } from "../lib/store";
 import theme from "../themes/themeConfig";
