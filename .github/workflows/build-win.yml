@@ -3,7 +3,7 @@ name: Build (WIN)
 on:
   push:
     tags:
-      - 'v*'
+      - 'release*'
 
 permissions:
   contents: write

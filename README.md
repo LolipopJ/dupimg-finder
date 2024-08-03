@@ -1,14 +1,18 @@
 # dupimg-finder / 重复图像查找工具
 
-Based on [EfficientIR](https://github.com/Sg4Dylan/EfficientIR).
+![search-duplicate-images](./docs/search-duplicate-images.png)
+
+> Based on [EfficientIR](https://github.com/Sg4Dylan/EfficientIR).
+
+A tool to find **duplicate image pairs** or **the most similar images of target image** in your file system.
 
 ## Usage
 
-![search-duplicate-images](./docs/search-duplicate-images.png)
-
 1. Add index paths that contain images.
 2. Update index to generate the eigenvalues of images.
-3. Search duplicate images using generated eigenvalues.
+3. Start to search using generated eigenvalues.
+   - Click `Search` in menu. Search duplicate image pairs.
+   - Click `Search Target` in menu. Search the most similar images of target image.
 
 ## Performance
 

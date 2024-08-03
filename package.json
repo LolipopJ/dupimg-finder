@@ -1,8 +1,8 @@
 {
   "private": true,
   "name": "dupimg-finder",
-  "description": "A tool to find duplicate images in your file system.",
-  "version": "0.1.0",
+  "description": "A tool to find duplicate image pairs or the most similar images of target image in your file system.",
+  "version": "0.2.0",
   "repository": "https://github.com/LolipopJ/dupimg-finder.git",
   "author": "LolipopJ <42314340+LolipopJ@users.noreply.github.com>",
   "license": "MIT",
