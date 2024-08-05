@@ -3,7 +3,7 @@ import serve from "electron-serve";
 import Store from "electron-store";
 import path from "path";
 
-import { IMAGE_EXTENSIONS } from "./constants";
+import { EFFICIENTIR_BINARY_PATH, IMAGE_EXTENSIONS } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import { createWindow } from "./helpers";
 import { runSpawn } from "./helpers/child-process";
@@ -89,39 +89,36 @@ if (isProd) {
     return await shell.openPath(path);
   });
 
-  ipcMain.on(EfficientIREvents.UPDATE_INDEX, (_, binaryPath, args) => {
-    runSpawn(binaryPath, args, mainWindow, {
+  ipcMain.on(EfficientIREvents.UPDATE_INDEX, (_, args) => {
+    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
       key: EfficientIREvents.UPDATE_INDEX,
-      title: "Update index",
+      title: "Update Index",
       pipe: "stderr",
     });
   });
 
-  ipcMain.on(EfficientIREvents.UPDATE_ALL_INDEX, (_, binaryPath, args) => {
-    runSpawn(binaryPath, args, mainWindow, {
+  ipcMain.on(EfficientIREvents.UPDATE_ALL_INDEX, (_, args) => {
+    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
       key: EfficientIREvents.UPDATE_ALL_INDEX,
-      title: "Update all index",
+      title: "Update All Index",
       pipe: "stderr",
     });
   });
 
-  ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG, (_, binaryPath, args) => {
-    runSpawn(binaryPath, args, mainWindow, {
+  ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG, (_, args) => {
+    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
       key: EfficientIREvents.SEARCH_DUP_IMG,
-      title: "Search duplicate images",
+      title: "Search Duplicate Images",
       pipe: "stderr",
     });
   });
 
-  ipcMain.on(
-    EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
-    (_, binaryPath, args) => {
-      runSpawn(binaryPath, args, mainWindow, {
-        key: EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
-        title: "Search duplicate images of target",
-        pipe: "stderr",
-      });
-    },
-  );
+  ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET, (_, args) => {
+    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
+      key: EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
+      title: "Search Duplicate Images of Target",
+      pipe: "stderr",
+    });
+  });
   //#endregion
 })();

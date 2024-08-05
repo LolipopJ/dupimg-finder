@@ -5,8 +5,8 @@ import {
   type OpenDialogReturnValue,
 } from "electron";
 import fs, { type Stats } from "fs";
-import path from "path";
 
+import { EFFICIENTIR_BINARY_PATH } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import { runExecSync } from "./helpers/child-process";
 
@@ -82,27 +82,22 @@ const electronApi = {
 //#endregion
 
 //#region EfficientIRApi
-const efficientIRBinaryPath = path.resolve(
-  "EfficientIR/dist/EfficientIR_nogui",
-  process.platform === "win32" ? "EfficientIR.exe" : "EfficientIR",
-);
-
 const efficientIRApi = {
   addIndexDir: (indexDir: string[]) => {
     const execParams = indexDir
       .map((dir) => `--add_index_dir ${dir}`)
       .join(" ");
-    runExecSync(`${efficientIRBinaryPath} ${execParams}`);
+    runExecSync(`${EFFICIENTIR_BINARY_PATH} ${execParams}`);
   },
   removeIndexDir: (indexDir: string[]) => {
     const execParams = indexDir
       .map((dir) => `--remove_index_dir ${dir}`)
       .join(" ");
-    runExecSync(`${efficientIRBinaryPath} ${execParams}`);
+    runExecSync(`${EFFICIENTIR_BINARY_PATH} ${execParams}`);
   },
   getIndexDir: () => {
     return JSON.parse(
-      runExecSync(`${efficientIRBinaryPath} --get_index_dir`),
+      runExecSync(`${EFFICIENTIR_BINARY_PATH} --get_index_dir`),
     ) as string[];
   },
   updateIndex: (indexDir: string[]) => {
@@ -111,18 +106,10 @@ const efficientIRApi = {
       args.push("--update_index_dir");
       args.push(dir);
     });
-    ipcRenderer.send(
-      EfficientIREvents.UPDATE_INDEX,
-      efficientIRBinaryPath,
-      args,
-    );
+    ipcRenderer.send(EfficientIREvents.UPDATE_INDEX, args);
   },
   updateAllIndex: () => {
-    ipcRenderer.send(
-      EfficientIREvents.UPDATE_ALL_INDEX,
-      efficientIRBinaryPath,
-      ["--update_index"],
-    );
+    ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, ["--update_index"]);
   },
   searchDupImg: (options?: {
     /** 70 <= threshold <= 100 */
@@ -130,7 +117,7 @@ const efficientIRApi = {
     sameDir?: boolean;
   }) => {
     const { threshold = 98.5, sameDir = true } = options ?? {};
-    ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG, efficientIRBinaryPath, [
+    ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG, [
       "--search_index",
       "--similarity_threshold",
       threshold,
@@ -144,11 +131,11 @@ const efficientIRApi = {
     },
   ) => {
     const { matchN } = options ?? {};
-    ipcRenderer.send(
-      EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
-      efficientIRBinaryPath,
-      ["--search_target", path, ...(matchN ? ["--match_n", matchN] : [])],
-    );
+    ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET, [
+      "--search_target",
+      path,
+      ...(matchN ? ["--match_n", matchN] : []),
+    ]);
   },
 };
 //#endregion
