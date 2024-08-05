@@ -8,11 +8,11 @@ A tool to find **duplicate image pairs** or **the most similar images of target 
 
 ## Usage
 
-1. Add index paths that contain images.
-2. Update index to generate the eigenvalues of images.
-3. Start to search using generated eigenvalues.
-   - Click `Search` in menu. Search duplicate image pairs.
-   - Click `Search Target` in menu. Search the most similar images of target image.
+1. `Home` page: add index paths that contain images.
+2. `Home` page: update index to generate the eigenvalues of images.
+3. Start a search progress using generated eigenvalues.
+   - `Search` page: search duplicate image pairs.
+   - `Search Target` page: search the most similar images of target image.
 
 ## Performance
 
@@ -32,23 +32,22 @@ yarn
 
 ### Backend Binary
 
-Python environment is required and `pyinstaller` has been installed.
+Python environment is required. Tested successfully on `python==3.12.4`.
 
 ```bash
 cd EfficientIR
 git submodule update --init
 pip install -r requirements.txt
-# build passed with `python==3.12.4`
 pyinstaller build_nogui.spec
 ```
 
-## Development
+### Development
 
 ```bash
 yarn dev
 ```
 
-## Lint
+### Lint
 
 ```bash
 yarn lint
@@ -57,7 +56,7 @@ yarn lint
 yarn lint --fix
 ```
 
-## Production
+### Production
 
 ```bash
 yarn build
