@@ -144,11 +144,12 @@ export default function SearchPage() {
     NonNullable<TableColumnType<SearchDupPairsResRecord>["render"]>
   >(
     (value, record) => {
-      const isPathA = value === record.path_a;
-      const [currentFileStat, otherFileStat] = isPathA
-        ? [record.fileA, record.fileB]
-        : [record.fileB, record.fileA];
+      const { path_a, path_b, fileA, fileB } = record;
+      const isPathA = value === path_a;
 
+      const [currentFileStat, otherFileStat] = isPathA
+        ? [fileA, fileB]
+        : [fileB, fileA];
       const isDeleted = currentFileStat.isDeleted;
       const isEarlier =
         currentFileStat.birthtime && otherFileStat.birthtime
@@ -158,6 +159,42 @@ export default function SearchPage() {
         currentFileStat.size && otherFileStat.size
           ? currentFileStat.size > otherFileStat.size
           : false;
+
+      //#region get the equal part between filenames
+      const pathA = path_a.replaceAll("\\", "/");
+      const pathB = path_b.replaceAll("\\", "/");
+
+      const fileDirA = pathA.substring(0, pathA.lastIndexOf("/") + 1);
+      const fileDirB = pathB.substring(0, pathB.lastIndexOf("/") + 1);
+      const currentFileDir = isPathA ? fileDirA : fileDirB;
+
+      const filenameA = pathA.substring(pathA.lastIndexOf("/") + 1);
+      const filenameB = pathB.substring(pathB.lastIndexOf("/") + 1);
+      const currentFilename = isPathA ? filenameA : filenameB;
+
+      let filenameEqualPart = "";
+      let filenameEqualPartLastIndex = 0;
+      while (
+        filenameA[filenameEqualPartLastIndex] ===
+          filenameB[filenameEqualPartLastIndex] &&
+        filenameEqualPartLastIndex < filenameA.length &&
+        filenameEqualPartLastIndex < filenameB.length
+      ) {
+        filenameEqualPart += filenameA[filenameEqualPartLastIndex];
+        filenameEqualPartLastIndex += 1;
+      }
+      const currentFilenameDiffPart = currentFilename.substring(
+        filenameEqualPartLastIndex,
+      );
+
+      const renderedFilename = (
+        <>
+          {currentFileDir}
+          <strong>{filenameEqualPart}</strong>
+          {currentFilenameDiffPart}
+        </>
+      );
+      //#endregion
 
       return (
         <div>
@@ -170,7 +207,7 @@ export default function SearchPage() {
               onOpenImage(value);
             }}
           >
-            {value}
+            {renderedFilename}
           </a>
           <div className="mt-1 select-none">
             <Space>

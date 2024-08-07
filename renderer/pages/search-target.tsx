@@ -108,6 +108,8 @@ export default function SearchTargetPage() {
     value,
     record,
   ) => {
+    const renderedFilename = String(value).replaceAll("\\", "/");
+
     const isDeleted = record.file.isDeleted;
     const isEarlier =
       record.file.birthtime && targetImageStats.birthtime
@@ -129,7 +131,7 @@ export default function SearchTargetPage() {
             onOpenImage(value);
           }}
         >
-          {value}
+          {renderedFilename}
         </a>
         <div className="mt-1 select-none">
           <Space>
