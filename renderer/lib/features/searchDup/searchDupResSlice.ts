@@ -2,7 +2,6 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { merge } from "lodash";
 
 import { SearchDupResRecord } from "../../../interfaces";
-import { type RootState } from "../../store";
 
 export interface IndexRecordState {
   value: SearchDupResRecord[];
@@ -11,7 +10,7 @@ export interface IndexRecordState {
 const initialState: IndexRecordState = { value: [] };
 
 export const searchDupResSlice = createSlice({
-  name: "indexRecord",
+  name: "searchDupRes",
   initialState,
   reducers: {
     setSearchDupResValue: (
@@ -37,7 +36,5 @@ export const searchDupResSlice = createSlice({
 
 export const { setSearchDupResValue, updateSearchDupResFileStats } =
   searchDupResSlice.actions;
-
-export const searchDupRes = (state: RootState) => state.searchDupRes.value;
 
 export default searchDupResSlice.reducer;

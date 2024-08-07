@@ -14,6 +14,7 @@ import { Provider } from "react-redux";
 
 import SpawnDialog from "../components/spawn-dialog";
 import { refreshIndexRecord } from "../lib/features/indexRecord/indexRecordSlice";
+import { refreshIgnoredRecords } from "../lib/features/searchDupPairs/searchDupPairsResSlice";
 import { AppStore, makeStore } from "../lib/store";
 import theme from "../themes/themeConfig";
 
@@ -28,6 +29,7 @@ function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     storeRef.current?.dispatch(refreshIndexRecord());
+    storeRef.current?.dispatch(refreshIgnoredRecords());
   }, []);
 
   return <Provider store={storeRef.current}>{children}</Provider>;

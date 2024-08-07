@@ -2,7 +2,6 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { remove } from "lodash";
 
 import { IndexRecord } from "../../../interfaces";
-import { type RootState } from "../../store";
 
 export interface IndexRecordState {
   value: IndexRecord[];
@@ -78,7 +77,5 @@ export const {
   removeIndexRecord,
   updateIndexRecord,
 } = indexRecordSlice.actions;
-
-export const indexRecord = (state: RootState) => state.indexRecord.value;
 
 export default indexRecordSlice.reducer;

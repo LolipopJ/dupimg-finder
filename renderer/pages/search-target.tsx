@@ -186,14 +186,15 @@ export default function SearchTargetPage() {
       key: "similarity",
       title: "Similarity",
       dataIndex: "sim",
+      align: "center",
       className: "align-top",
-      defaultSortOrder: "descend",
-      sorter: (a, b) => a.sim - b.sim,
       render: (value) => (
         <span>
           {Number(value).toFixed(2)} <small>%</small>
         </span>
       ),
+      defaultSortOrder: "descend",
+      sorter: (a, b) => a.sim - b.sim,
     },
   ];
 
