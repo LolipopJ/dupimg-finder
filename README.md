@@ -6,7 +6,13 @@
 
 A tool to find **duplicate image pairs** or **the most similar images of target image** in your file system.
 
+## Support Platforms
+
+- `Windows`
+
 ## Usage
+
+[Download](https://github.com/LolipopJ/dupimg-finder/releases) and install the tool.
 
 1. `Home` page: add index paths that contain images.
 2. `Home` page: update index to generate the eigenvalues of images.
