@@ -9,6 +9,38 @@
 }
 
 @layer components {
+  .root-layout-enter {
+    @apply scale-95;
+  }
+
+  .root-layout-enter-active {
+    @apply scale-100 transition duration-300;
+  }
+
+  .root-layout-exit {
+    @apply opacity-100;
+  }
+
+  .root-layout-exit-active {
+    @apply opacity-0 transition duration-300;
+  }
+
+  .route-page-enter {
+    @apply opacity-0 translate-y-4;
+  }
+
+  .route-page-enter-active {
+    @apply opacity-100 translate-y-0 transition duration-150;
+  }
+
+  .route-page-exit {
+    @apply opacity-100 translate-y-0;
+  }
+
+  .route-page-exit-active {
+    @apply opacity-0 -translate-y-2 transition duration-150;
+  }
+
   .link--visited {
     @apply text-violet-900;
 

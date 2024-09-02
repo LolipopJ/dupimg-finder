@@ -5,12 +5,14 @@ import {
   Layout,
   Menu,
   type MenuProps,
+  Spin,
 } from "antd";
 import type { AppProps } from "next/app";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Provider } from "react-redux";
+import { CSSTransition, SwitchTransition } from "react-transition-group";
 
 import SpawnDialog from "../components/spawn-dialog";
 import { refreshIndexRecord } from "../lib/features/indexRecord/indexRecordSlice";
@@ -19,21 +21,6 @@ import { AppStore, makeStore } from "../lib/store";
 import theme from "../themes/themeConfig";
 
 type MenuItem = Required<MenuProps>["items"][number];
-
-function StoreProvider({ children }: { children: React.ReactNode }) {
-  const storeRef = useRef<AppStore>();
-  if (!storeRef.current) {
-    // Create the store instance the first time this renders
-    storeRef.current = makeStore();
-  }
-
-  useEffect(() => {
-    storeRef.current?.dispatch(refreshIndexRecord());
-    storeRef.current?.dispatch(refreshIgnoredRecords());
-  }, []);
-
-  return <Provider store={storeRef.current}>{children}</Provider>;
-}
 
 const getItem = (
   label: React.ReactNode,
@@ -55,9 +42,35 @@ const menuItems = [
   getItem(<Link href="/search-target">Search Target</Link>, "/search-target"),
 ];
 
+function StoreProvider({
+  children,
+  onLoaded,
+}: {
+  children: React.ReactNode;
+  onLoaded?: () => void;
+}) {
+  const storeRef = useRef<AppStore>();
+  if (!storeRef.current) {
+    // Create the store instance the first time this renders
+    storeRef.current = makeStore();
+  }
+
+  useEffect(() => {
+    storeRef.current?.dispatch(refreshIndexRecord());
+    storeRef.current?.dispatch(refreshIgnoredRecords());
+    onLoaded?.();
+  }, [onLoaded]);
+
+  return <Provider store={storeRef.current}>{children}</Provider>;
+}
+
 function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const pathname = router.pathname;
+
+  const [loadingState, setLoadingState] = useState<"loading" | "loaded">(
+    "loading",
+  );
   const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([]);
 
   useEffect(() => {
@@ -68,28 +81,54 @@ function App({ Component, pageProps }: AppProps) {
     ]);
   }, [pathname]);
 
+  const onStoreLoaded = useCallback(() => {
+    setLoadingState("loaded");
+  }, []);
+
   return (
-    <AntdConfigProvider theme={theme}>
-      <StoreProvider>
-        <Layout className="h-screen">
-          <Layout.Sider>
-            <Menu
-              items={menuItems}
-              selectedKeys={menuSelectedKeys}
-              theme="dark"
-              mode="inline"
-              className="h-full"
-            />
-          </Layout.Sider>
-          <Layout className="overflow-auto">
-            <Layout.Content className="p-6">
-              <Component {...pageProps} />
-            </Layout.Content>
-          </Layout>
-        </Layout>
-      </StoreProvider>
-      <SpawnDialog />
-    </AntdConfigProvider>
+    <StoreProvider onLoaded={onStoreLoaded}>
+      <AntdConfigProvider theme={theme}>
+        <SwitchTransition mode="in-out">
+          <CSSTransition
+            key={loadingState}
+            timeout={300}
+            classNames="root-layout"
+          >
+            {loadingState === "loading" ? (
+              <Spin tip="Preparing for you..." fullscreen />
+            ) : (
+              <Layout className="h-screen">
+                <Layout.Sider>
+                  <Menu
+                    items={menuItems}
+                    selectedKeys={menuSelectedKeys}
+                    theme="dark"
+                    mode="inline"
+                    className="h-full"
+                  />
+                </Layout.Sider>
+
+                <Layout className="overflow-auto">
+                  <Layout.Content className="p-6">
+                    <SwitchTransition mode="out-in">
+                      <CSSTransition
+                        key={pathname}
+                        timeout={150}
+                        classNames="route-page"
+                      >
+                        <Component {...pageProps} />
+                      </CSSTransition>
+                    </SwitchTransition>
+                  </Layout.Content>
+                </Layout>
+
+                <SpawnDialog />
+              </Layout>
+            )}
+          </CSSTransition>
+        </SwitchTransition>
+      </AntdConfigProvider>
+    </StoreProvider>
   );
 }
 
