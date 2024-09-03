@@ -6,9 +6,14 @@ import {
 } from "electron";
 import fs, { type Stats } from "fs";
 
-import { EFFICIENTIR_BINARY_PATH } from "./constants";
+import {
+  DEFAULT_SEARCH_DUP_OPTIONS,
+  DEFAULT_SEARCH_DUP_PAIRS_OPTIONS,
+  EFFICIENTIR_BINARY_PATH,
+} from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import { runExecSync } from "./helpers/child-process";
+import type { SearchDupOptions, SearchDupPairsOptions } from "./interfaces";
 
 //#region IPC
 const ipc = {
@@ -111,29 +116,18 @@ const efficientIRApi = {
   updateAllIndex: () => {
     ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, ["--update_index"]);
   },
-  searchDupImg: (options?: {
-    /** 70 <= threshold <= 100 */
-    threshold?: number;
-    sameDir?: boolean;
-  }) => {
-    const { threshold = 98.5, sameDir = true } = options ?? {};
-    ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG, [
+  searchDupPairs: (options?: SearchDupPairsOptions) => {
+    const { threshold, sameDir } = options ?? DEFAULT_SEARCH_DUP_PAIRS_OPTIONS;
+    ipcRenderer.send(EfficientIREvents.SEARCH_DUP_PAIRS, [
       "--search_index",
-      "--similarity_threshold",
-      threshold,
+      ...(threshold ? ["--similarity_threshold", threshold] : []),
       ...(sameDir ? ["--same_dir"] : []),
     ]);
   },
-  searchDupImgOfTarget: (
-    path: string,
-    options?: {
-      matchN?: number;
-    },
-  ) => {
-    const { matchN } = options ?? {};
+  searchDupImgOfTarget: (path: string, options?: SearchDupOptions) => {
+    const { matchN } = options ?? DEFAULT_SEARCH_DUP_OPTIONS;
     ipcRenderer.send(EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET, [
-      "--search_target",
-      path,
+      ...["--search_target", path],
       ...(matchN ? ["--match_n", matchN] : []),
     ]);
   },

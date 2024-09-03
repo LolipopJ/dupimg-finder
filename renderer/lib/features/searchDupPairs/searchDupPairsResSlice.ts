@@ -10,7 +10,7 @@ export interface IndexRecordState {
 
 const initialState: IndexRecordState = { value: [], ignored: {} };
 
-const ignoredSearchDupPairsResRecordsKey = "ignored-search-dup-pairs-records";
+const IGNORED_SEARCH_DUP_PAIRS_RECORDS_KEY = "ignored-search-dup-pairs-records";
 
 export const searchDupPairsResSlice = createSlice({
   name: "searchDupPairsRes",
@@ -34,7 +34,7 @@ export const searchDupPairsResSlice = createSlice({
     },
     refreshIgnoredRecords: (state) => {
       const ignored: IndexRecordState["ignored"] =
-        window.storeApi.getValue(ignoredSearchDupPairsResRecordsKey) ?? {};
+        window.storeApi.getValue(IGNORED_SEARCH_DUP_PAIRS_RECORDS_KEY) ?? {};
 
       for (const pathA in ignored) {
         for (const pathB in ignored[pathA]) {
@@ -55,7 +55,7 @@ export const searchDupPairsResSlice = createSlice({
       action: PayloadAction<{ pathA: string; pathB: string }>,
     ) => {
       const ignored: IndexRecordState["ignored"] =
-        window.storeApi.getValue(ignoredSearchDupPairsResRecordsKey) ?? {};
+        window.storeApi.getValue(IGNORED_SEARCH_DUP_PAIRS_RECORDS_KEY) ?? {};
       const { pathA, pathB } = action.payload;
 
       if (!ignored[pathA]) {
@@ -68,7 +68,7 @@ export const searchDupPairsResSlice = createSlice({
       }
       ignored[pathB][pathA] = true;
 
-      window.storeApi.setValue(ignoredSearchDupPairsResRecordsKey, ignored);
+      window.storeApi.setValue(IGNORED_SEARCH_DUP_PAIRS_RECORDS_KEY, ignored);
       state.ignored = ignored;
     },
     removeIgnoredRecord: (
@@ -76,13 +76,13 @@ export const searchDupPairsResSlice = createSlice({
       action: PayloadAction<{ pathA: string; pathB: string }>,
     ) => {
       const ignored: IndexRecordState["ignored"] =
-        window.storeApi.getValue(ignoredSearchDupPairsResRecordsKey) ?? {};
+        window.storeApi.getValue(IGNORED_SEARCH_DUP_PAIRS_RECORDS_KEY) ?? {};
       const { pathA, pathB } = action.payload;
 
       ignored[pathA][pathB] = false;
       ignored[pathB][pathA] = false;
 
-      window.storeApi.setValue(ignoredSearchDupPairsResRecordsKey, ignored);
+      window.storeApi.setValue(IGNORED_SEARCH_DUP_PAIRS_RECORDS_KEY, ignored);
       state.ignored = ignored;
     },
   },

@@ -105,9 +105,9 @@ if (isProd) {
     });
   });
 
-  ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG, (_, args) => {
+  ipcMain.on(EfficientIREvents.SEARCH_DUP_PAIRS, (_, args) => {
     runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
-      key: EfficientIREvents.SEARCH_DUP_IMG,
+      key: EfficientIREvents.SEARCH_DUP_PAIRS,
       title: "Search Duplicate Images",
       pipe: "stderr",
     });

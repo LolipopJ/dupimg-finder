@@ -12,7 +12,7 @@ export enum ElectronEvents {
 export enum EfficientIREvents {
   UPDATE_INDEX = "efficientIR:updateIndex",
   UPDATE_ALL_INDEX = "efficientIR:updateAllIndex",
-  SEARCH_DUP_IMG = "efficientIR:searchDupImg",
+  SEARCH_DUP_PAIRS = "efficientIR:searchDupPairs",
   SEARCH_DUP_IMG_OF_TARGET = "efficientIR:searchDupImgOfTarget",
 }
 

@@ -6,6 +6,8 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Form,
+  FormProps,
   Image,
   InputNumber,
   Popover,
@@ -18,9 +20,11 @@ import {
 import Head from "next/head";
 import { useEffect, useState } from "react";
 
+import { DEFAULT_SEARCH_DUP_OPTIONS } from "../constants";
 import { EfficientIREvents, SpawnEvents } from "../enums";
 import type {
   FileStats,
+  SearchDupOptions,
   SearchDupRes,
   SearchDupResRecord,
   SpawnOptions,
@@ -31,13 +35,12 @@ import {
 } from "../lib/features/searchDup/searchDupResSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
 
-const DEFAULT_MATCH_N = 5;
+const CUSTOM_SEARCH_DUP_OPTIONS_KEY = "custom-search-dup-options";
 
 export default function SearchTargetPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [targetImagePath, setTargetImagePath] = useState<string>();
   const [targetImageStats, setTargetImageStats] = useState<FileStats>({});
-  const [matchN, setMatchN] = useState<number>(DEFAULT_MATCH_N);
 
   const searchDupRes = useAppSelector((state) => state.searchDupRes.value);
   const dispatch = useAppDispatch();
@@ -66,6 +69,13 @@ export default function SearchTargetPage() {
             error,
           );
         }
+      },
+    );
+    const cleanupSpawnFinished = window.ipc.on(
+      SpawnEvents.SPAWN_FINISHED,
+      // @ts-expect-error: override using defined types
+      (code: number, options: SpawnOptions) => {
+        if (options.key !== EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET) return;
 
         setLoading(false);
       },
@@ -73,10 +83,17 @@ export default function SearchTargetPage() {
 
     return () => {
       cleanupSpawnStdout();
+      cleanupSpawnFinished();
     };
   }, [dispatch]);
 
-  const onSearchDupImg = async () => {
+  const initialSearchDupOptions: SearchDupOptions =
+    window.storeApi.getValue(CUSTOM_SEARCH_DUP_OPTIONS_KEY) ??
+    DEFAULT_SEARCH_DUP_OPTIONS;
+
+  const onSearchDupImg: FormProps<SearchDupOptions>["onFinish"] = async (
+    options,
+  ) => {
     const selectFileRes = await window.electronApi.selectImage();
     if (!selectFileRes.canceled) {
       setLoading(true);
@@ -87,7 +104,9 @@ export default function SearchTargetPage() {
       const [stats] = window.nodeApi.getFilesStats([path]);
       setTargetImageStats(stats ?? { isDeleted: true });
 
-      window.efficientIRApi.searchDupImgOfTarget(path, { matchN });
+      window.storeApi.setValue(CUSTOM_SEARCH_DUP_OPTIONS_KEY, options);
+
+      window.efficientIRApi.searchDupImgOfTarget(path, options);
     }
   };
 
@@ -206,40 +225,65 @@ export default function SearchTargetPage() {
         <title>Search Duplicate Images of Target - Dupimg Finder</title>
       </Head>
       <div>
-        <Space className="mb-4 w-full justify-end">
-          <InputNumber
-            value={matchN}
-            onChange={(v) => setMatchN(v ?? DEFAULT_MATCH_N)}
-            min={1}
-            step={1}
-            addonBefore="Match most similar"
-            addonAfter="images"
-            disabled={loading}
-          />
-          <Popover
-            trigger={targetImagePath ? ["hover"] : []}
-            title="Current selected image"
-            overlayClassName="preview-image-card"
-            content={() => {
-              if (!targetImagePath) return null;
-              return (
-                <>
-                  <div className="mb-2">{targetImagePath}</div>
-                  <div>{renderImagePreview(targetImagePath)}</div>
-                </>
-              );
-            }}
-          >
-            <Button
-              type="primary"
-              onClick={onSearchDupImg}
-              icon={<ExportOutlined />}
-              loading={loading}
+        <Form<SearchDupOptions>
+          name="search-dup-options"
+          initialValues={initialSearchDupOptions}
+          onFinish={onSearchDupImg}
+          colon={false}
+          className="flex"
+        >
+          <Space className="ml-auto items-start">
+            <Form.Item
+              name="matchN"
+              className="w-72"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value || value < 1) {
+                      return Promise.reject(
+                        new Error("Please enter match count"),
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
             >
-              SELECT TARGET IMAGE
-            </Button>
-          </Popover>
-        </Space>
+              <InputNumber
+                min={1}
+                step={1}
+                addonBefore={
+                  <span className="select-none">Match most similar</span>
+                }
+                addonAfter={<span className="select-none">images</span>}
+                disabled={loading}
+              />
+            </Form.Item>
+            <Popover
+              trigger={targetImagePath ? ["hover"] : []}
+              title="Target image"
+              overlayClassName="preview-image-card"
+              content={() => {
+                if (!targetImagePath) return null;
+                return (
+                  <div>
+                    <code className="mb-2">{targetImagePath}</code>
+                    <div>{renderImagePreview(targetImagePath)}</div>
+                  </div>
+                );
+              }}
+            >
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<ExportOutlined />}
+                loading={loading}
+              >
+                SELECT TARGET IMAGE
+              </Button>
+            </Popover>
+          </Space>
+        </Form>
         <Table
           columns={searchDupResTableColumns}
           dataSource={searchDupRes}

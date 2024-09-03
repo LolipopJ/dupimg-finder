@@ -9,7 +9,7 @@ export interface IndexRecordState {
 
 const initialState: IndexRecordState = { value: [] };
 
-const indexLastUpdatedKey = "index-state-last-updated";
+const INDEX_LAST_UPDATED_KEY = "index-state-last-updated";
 
 export const indexRecordSlice = createSlice({
   name: "indexRecord",
@@ -17,7 +17,7 @@ export const indexRecordSlice = createSlice({
   reducers: {
     refreshIndexRecord: (state) => {
       const indexLastUpdatedRecord =
-        window.storeApi.getValue(indexLastUpdatedKey) ?? {};
+        window.storeApi.getValue(INDEX_LAST_UPDATED_KEY) ?? {};
       state.value = window.efficientIRApi.getIndexDir().map((path) => ({
         path,
         lastUpdated: indexLastUpdatedRecord[path] ?? "Never",
@@ -48,7 +48,7 @@ export const indexRecordSlice = createSlice({
     ) => {
       const currentDateTime = new Date().toLocaleString();
       const indexLastUpdatedRecord =
-        window.storeApi.getValue(indexLastUpdatedKey) ?? {};
+        window.storeApi.getValue(INDEX_LAST_UPDATED_KEY) ?? {};
 
       const payload = action.payload;
       const isUpdateAllIndex = !Array.isArray(payload);
@@ -66,7 +66,7 @@ export const indexRecordSlice = createSlice({
         }
         return record;
       });
-      window.storeApi.setValue(indexLastUpdatedKey, indexLastUpdatedRecord);
+      window.storeApi.setValue(INDEX_LAST_UPDATED_KEY, indexLastUpdatedRecord);
     },
   },
 });

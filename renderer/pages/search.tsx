@@ -7,6 +7,8 @@ import {
 import {
   Button,
   Checkbox,
+  Form,
+  FormProps,
   Image,
   InputNumber,
   Space,
@@ -19,12 +21,14 @@ import {
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { DEFAULT_SEARCH_DUP_PAIRS_OPTIONS } from "../constants";
 import { EfficientIREvents, SpawnEvents } from "../enums";
 import type {
   SearchDupPairsRes,
   SearchDupPairsResRecord,
   SpawnOptions,
 } from "../interfaces";
+import type { SearchDupPairsOptions } from "../interfaces";
 import {
   addIgnoredRecord,
   removeIgnoredRecord,
@@ -33,13 +37,11 @@ import {
 } from "../lib/features/searchDupPairs/searchDupPairsResSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
 
-const DEFAULT_THRESHOLD = 98.5;
+const CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY = "custom-search-dup-pairs-options";
 
 export default function SearchPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [hideIgnoredPairs, setHideIgnoredPairs] = useState<boolean>(true);
-  const [threshold, setThreshold] = useState<number>(DEFAULT_THRESHOLD);
-  const [sameDir, setSameDir] = useState<boolean>(true);
   const [
     searchDupPairsResExpandedRowKeys,
     setSearchDupPairsResExpandedRowKeys,
@@ -69,7 +71,7 @@ export default function SearchPage() {
       SpawnEvents.SPAWN_STDOUT,
       // @ts-expect-error: override using defined types
       (data: string, options: SpawnOptions) => {
-        if (options.key !== EfficientIREvents.SEARCH_DUP_IMG) return;
+        if (options.key !== EfficientIREvents.SEARCH_DUP_PAIRS) return;
 
         try {
           const parsedRes: SearchDupPairsRes[] = JSON.parse(data);
@@ -91,6 +93,13 @@ export default function SearchPage() {
         } catch (error) {
           console.error("Resolve search duplicate images failed:", error);
         }
+      },
+    );
+    const cleanupSpawnFinished = window.ipc.on(
+      SpawnEvents.SPAWN_FINISHED,
+      // @ts-expect-error: override using defined types
+      (code: number, options: SpawnOptions) => {
+        if (options.key !== EfficientIREvents.SEARCH_DUP_PAIRS) return;
 
         setLoading(false);
       },
@@ -98,12 +107,22 @@ export default function SearchPage() {
 
     return () => {
       cleanupSpawnStdout();
+      cleanupSpawnFinished();
     };
   }, [dispatch]);
 
-  const onSearchDupImg = () => {
+  const initialSearchDupPairsOptions: SearchDupPairsOptions =
+    window.storeApi.getValue(CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY) ??
+    DEFAULT_SEARCH_DUP_PAIRS_OPTIONS;
+
+  const onSearchDupPairs: FormProps<SearchDupPairsOptions>["onFinish"] = (
+    options,
+  ) => {
     setLoading(true);
-    window.efficientIRApi.searchDupImg({ threshold, sameDir });
+
+    window.storeApi.setValue(CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY, options);
+
+    window.efficientIRApi.searchDupPairs(options);
   };
 
   const onOpenImage = useCallback(
@@ -302,43 +321,78 @@ export default function SearchPage() {
         <title>Search Duplicate Images - Dupimg Finder</title>
       </Head>
       <div>
-        <div className="mb-4 flex align-middle">
-          <Space className="mr-2">
-            <Switch
-              value={hideIgnoredPairs}
-              onChange={(checked) => setHideIgnoredPairs(checked)}
-              checkedChildren={"HIDE IGNORED"}
-              unCheckedChildren={"SHOW IGNORED"}
-            />
+        <Form<SearchDupPairsOptions>
+          name="search-dup-pairs-options"
+          initialValues={initialSearchDupPairsOptions}
+          onFinish={onSearchDupPairs}
+          colon={false}
+          className="flex"
+        >
+          <Space className="mr-2 items-start">
+            <Form.Item className="w-32">
+              <Switch
+                value={hideIgnoredPairs}
+                onChange={(checked) => setHideIgnoredPairs(checked)}
+                checkedChildren={"HIDE IGNORED"}
+                unCheckedChildren={"SHOW IGNORED"}
+              />
+            </Form.Item>
           </Space>
-          <Space className="ml-auto">
-            <Checkbox
-              checked={sameDir}
-              onChange={(e) => setSameDir(e.target.checked)}
+          <Space className="ml-auto items-start">
+            <Form.Item name="sameDir" valuePropName="checked">
+              <Checkbox className="select-none" disabled={loading}>
+                Compare images of same directory
+              </Checkbox>
+            </Form.Item>
+            <Form.Item
+              name="threshold"
+              className="w-52"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) {
+                      return Promise.reject(
+                        new Error("Please enter similarity threshold"),
+                      );
+                    }
+                    if (value > 100 || value < 70) {
+                      return Promise.reject(
+                        new Error(
+                          "Similarity threshold should between 70 and 100",
+                        ),
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
             >
-              Compare images of same directory
-            </Checkbox>
-            <InputNumber
-              value={threshold}
-              onChange={(v) => setThreshold(v ?? DEFAULT_THRESHOLD)}
-              min={70}
-              max={100}
-              step={0.1}
-              precision={1}
-              addonBefore="Similarity >="
-              addonAfter="%"
-              disabled={loading}
-            />
-            <Button
-              type="primary"
-              onClick={onSearchDupImg}
-              icon={<SearchOutlined />}
-              loading={loading}
-            >
-              START SEARCH
-            </Button>
+              <InputNumber
+                min={70}
+                max={100}
+                step={0.1}
+                precision={1}
+                addonBefore={
+                  <Tooltip title=">= 95% is recommended">
+                    <span className="select-none">{"Similarity >="}</span>
+                  </Tooltip>
+                }
+                addonAfter={<span className="select-none">%</span>}
+                disabled={loading}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<SearchOutlined />}
+                loading={loading}
+              >
+                START SEARCH
+              </Button>
+            </Form.Item>
           </Space>
-        </div>
+        </Form>
         <Table
           columns={searchDupPairsResTableColumns}
           dataSource={filteredSearchDupPairsRes}
