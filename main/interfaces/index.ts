@@ -1,3 +1,14 @@
+export interface EfficientIRConfig {
+  config_version: number;
+  img_size: number;
+  index_capacity: number;
+  metainfo_path: string;
+  exists_index_path: string;
+  index_path: string;
+  model_path: string;
+  search_dir: string[];
+}
+
 export interface SpawnOptions {
   key: string;
   title: string;

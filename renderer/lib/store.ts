@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 
-import indexRecordSlice from "./features/indexRecord/indexRecordSlice";
+import configSlice from "./features/config/configSlice";
 import searchDupResSlice from "./features/searchDup/searchDupResSlice";
 import searchDupPairsResSlice from "./features/searchDupPairs/searchDupPairsResSlice";
 
 export const makeStore = () =>
   configureStore({
     reducer: {
-      indexRecord: indexRecordSlice,
+      config: configSlice,
       searchDupPairsRes: searchDupPairsResSlice,
       searchDupRes: searchDupResSlice,
     },

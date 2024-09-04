@@ -1,8 +1,4 @@
-import {
-  FolderAddOutlined,
-  ReloadOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
+import { FolderAddOutlined, SyncOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Space, Table, type TableColumnsType } from "antd";
 import Head from "next/head";
 import { useState } from "react";
@@ -10,22 +6,17 @@ import { useState } from "react";
 import type { IndexRecord } from "../interfaces";
 import {
   addIndexRecord,
-  refreshIndexRecord,
   removeIndexRecord,
   updateIndexRecord,
-} from "../lib/features/indexRecord/indexRecordSlice";
+} from "../lib/features/config/configSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
 
 export default function HomePage() {
   const [updateIndexRecordLoading, setUpdateIndexRecordLoading] =
     useState<boolean>(false);
 
-  const indexRecord = useAppSelector((state) => state.indexRecord.value);
+  const indexRecord = useAppSelector((state) => state.config.indexRecord);
   const dispatch = useAppDispatch();
-
-  const onRefreshIndex = () => {
-    dispatch(refreshIndexRecord());
-  };
 
   const onAddIndex = () => {
     window.electronApi.selectDirectory().then((res) => {
@@ -53,6 +44,7 @@ export default function HomePage() {
       key: "lastUpdated",
       title: "Last Updated",
       dataIndex: "lastUpdated",
+      render: (value) => value ?? "Never",
     },
     {
       key: "action",
@@ -94,9 +86,6 @@ export default function HomePage() {
       </Head>
       <div>
         <Space className="mb-4 w-full justify-end">
-          <Button onClick={onRefreshIndex} icon={<ReloadOutlined />}>
-            REFRESH
-          </Button>
           <Button onClick={onAddIndex} icon={<FolderAddOutlined />}>
             ADD INDEX
           </Button>

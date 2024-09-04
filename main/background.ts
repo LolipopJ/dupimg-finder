@@ -5,8 +5,13 @@ import path from "path";
 
 import { EFFICIENTIR_BINARY_PATH, IMAGE_EXTENSIONS } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
-import { createWindow } from "./helpers";
-import { runSpawn } from "./helpers/child-process";
+import {
+  createWindow,
+  getEfficientIRConfig,
+  getEfficientIRConfigFilePath,
+  runSpawn,
+  updateEfficientIRConfig,
+} from "./helpers";
 
 const store = new Store();
 
@@ -29,6 +34,7 @@ if (isProd) {
 } else {
   app.setPath("userData", `${app.getPath("userData")} (development)`);
 }
+const efficientIRConfigPath = getEfficientIRConfigFilePath();
 
 (async () => {
   await app.whenReady();
@@ -89,36 +95,64 @@ if (isProd) {
     return await shell.openPath(path);
   });
 
+  ipcMain.on(EfficientIREvents.GET_CONFIG, (event) => {
+    event.returnValue = getEfficientIRConfig();
+  });
+
+  ipcMain.on(EfficientIREvents.UPDATE_CONFIG, (_, newConfig) => {
+    updateEfficientIRConfig(newConfig);
+  });
+
   ipcMain.on(EfficientIREvents.UPDATE_INDEX, (_, args) => {
-    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
-      key: EfficientIREvents.UPDATE_INDEX,
-      title: "Update Index",
-      pipe: "stderr",
-    });
+    runSpawn(
+      EFFICIENTIR_BINARY_PATH,
+      [...args, ...["--config_path", efficientIRConfigPath]],
+      mainWindow,
+      {
+        key: EfficientIREvents.UPDATE_INDEX,
+        title: "Update Index",
+        pipe: "stderr",
+      },
+    );
   });
 
   ipcMain.on(EfficientIREvents.UPDATE_ALL_INDEX, (_, args) => {
-    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
-      key: EfficientIREvents.UPDATE_ALL_INDEX,
-      title: "Update All Index",
-      pipe: "stderr",
-    });
+    runSpawn(
+      EFFICIENTIR_BINARY_PATH,
+      [...args, ...["--config_path", efficientIRConfigPath]],
+      mainWindow,
+      {
+        key: EfficientIREvents.UPDATE_ALL_INDEX,
+        title: "Update All Index",
+        pipe: "stderr",
+      },
+    );
   });
 
   ipcMain.on(EfficientIREvents.SEARCH_DUP_PAIRS, (_, args) => {
-    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
-      key: EfficientIREvents.SEARCH_DUP_PAIRS,
-      title: "Search Duplicate Images",
-      pipe: "stderr",
-    });
+    runSpawn(
+      EFFICIENTIR_BINARY_PATH,
+      [...args, ...["--config_path", efficientIRConfigPath]],
+      mainWindow,
+      {
+        key: EfficientIREvents.SEARCH_DUP_PAIRS,
+        title: "Search Duplicate Images",
+        pipe: "stderr",
+      },
+    );
   });
 
   ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET, (_, args) => {
-    runSpawn(EFFICIENTIR_BINARY_PATH, args, mainWindow, {
-      key: EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
-      title: "Search Duplicate Images of Target",
-      pipe: "stderr",
-    });
+    runSpawn(
+      EFFICIENTIR_BINARY_PATH,
+      [...args, ...["--config_path", efficientIRConfigPath]],
+      mainWindow,
+      {
+        key: EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,
+        title: "Search Duplicate Images of Target",
+        pipe: "stderr",
+      },
+    );
   });
   //#endregion
 })();

@@ -10,6 +10,8 @@ export enum ElectronEvents {
 }
 
 export enum EfficientIREvents {
+  GET_CONFIG = "efficientIR:getConfig",
+  UPDATE_CONFIG = "efficientIR:updateConfig",
   UPDATE_INDEX = "efficientIR:updateIndex",
   UPDATE_ALL_INDEX = "efficientIR:updateAllIndex",
   SEARCH_DUP_PAIRS = "efficientIR:searchDupPairs",

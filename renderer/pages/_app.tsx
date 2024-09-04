@@ -15,7 +15,7 @@ import { Provider } from "react-redux";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
 
 import SpawnDialog from "../components/spawn-dialog";
-import { refreshIndexRecord } from "../lib/features/indexRecord/indexRecordSlice";
+import { refreshConfig } from "../lib/features/config/configSlice";
 import { refreshIgnoredRecords } from "../lib/features/searchDupPairs/searchDupPairsResSlice";
 import { AppStore, makeStore } from "../lib/store";
 import theme from "../themes/themeConfig";
@@ -56,7 +56,7 @@ function StoreProvider({
   }
 
   useEffect(() => {
-    storeRef.current?.dispatch(refreshIndexRecord());
+    storeRef.current?.dispatch(refreshConfig());
     storeRef.current?.dispatch(refreshIgnoredRecords());
     onLoaded?.();
   }, [onLoaded]);

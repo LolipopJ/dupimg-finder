@@ -9,11 +9,13 @@ import fs, { type Stats } from "fs";
 import {
   DEFAULT_SEARCH_DUP_OPTIONS,
   DEFAULT_SEARCH_DUP_PAIRS_OPTIONS,
-  EFFICIENTIR_BINARY_PATH,
 } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
-import { runExecSync } from "./helpers/child-process";
-import type { SearchDupOptions, SearchDupPairsOptions } from "./interfaces";
+import type {
+  EfficientIRConfig,
+  SearchDupOptions,
+  SearchDupPairsOptions,
+} from "./interfaces";
 
 //#region IPC
 const ipc = {
@@ -88,23 +90,10 @@ const electronApi = {
 
 //#region EfficientIRApi
 const efficientIRApi = {
-  addIndexDir: (indexDir: string[]) => {
-    const execParams = indexDir
-      .map((dir) => `--add_index_dir ${dir}`)
-      .join(" ");
-    runExecSync(`${EFFICIENTIR_BINARY_PATH} ${execParams}`);
-  },
-  removeIndexDir: (indexDir: string[]) => {
-    const execParams = indexDir
-      .map((dir) => `--remove_index_dir ${dir}`)
-      .join(" ");
-    runExecSync(`${EFFICIENTIR_BINARY_PATH} ${execParams}`);
-  },
-  getIndexDir: () => {
-    return JSON.parse(
-      runExecSync(`${EFFICIENTIR_BINARY_PATH} --get_index_dir`),
-    ) as string[];
-  },
+  getConfig: () =>
+    ipcRenderer.sendSync(EfficientIREvents.GET_CONFIG) as EfficientIRConfig,
+  updateConfig: (newConfig: EfficientIRConfig) =>
+    ipcRenderer.send(EfficientIREvents.UPDATE_CONFIG, newConfig),
   updateIndex: (indexDir: string[]) => {
     const args: string[] = [];
     indexDir.forEach((dir) => {
