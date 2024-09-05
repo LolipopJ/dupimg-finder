@@ -277,8 +277,8 @@ export default function SearchPage() {
           align: "center",
           render: (value) => {
             return (
-              <span>
-                {Number(value).toFixed(2)} <small>%</small>
+              <span className="similarity-percent">
+                {Number(value).toFixed(2)}
               </span>
             );
           },

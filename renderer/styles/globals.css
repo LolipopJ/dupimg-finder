@@ -49,6 +49,13 @@
     }
   }
 
+  .similarity-percent {
+    &::after {
+      @apply ml-1 text-xs;
+      content: '%';
+    }
+  }
+
   .spawn-modal {
     .ant-modal-content,
     .ant-modal-header {

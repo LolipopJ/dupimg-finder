@@ -221,8 +221,8 @@ export default function SearchTargetPage() {
           align: "center",
           className: "align-top",
           render: (value) => (
-            <span>
-              {Number(value).toFixed(2)} <small>%</small>
+            <span className="similarity-percent">
+              {Number(value).toFixed(2)}
             </span>
           ),
           defaultSortOrder: "descend",
