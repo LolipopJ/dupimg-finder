@@ -13,6 +13,8 @@ files:
 extraResources:
   - from: EfficientIR/dist/EfficientIR_nogui
     to: ../EfficientIR/dist/EfficientIR_nogui
+    filter:
+      - '!models/ofa-sim.onnx'
 win:
   target:
     - nsis
