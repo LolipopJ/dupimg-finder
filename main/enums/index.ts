@@ -7,6 +7,8 @@ export enum ElectronEvents {
   SELECT_DIRECTORY = "electron:selectDirectory",
   SELECT_IMAGE = "electron:selectImage",
   OPEN_FILE = "electron:openFile",
+  REVEAL_FILE = "electron:revealFile",
+  DELETE_FILE = "electron:deleteFile",
 }
 
 export enum EfficientIREvents {

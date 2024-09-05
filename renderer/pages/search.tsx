@@ -77,7 +77,7 @@ export default function SearchPage() {
           const parsedRes: SearchDupPairsRes[] = JSON.parse(data);
           const parsedResRecord: SearchDupPairsResRecord[] = parsedRes.map(
             (res) => {
-              const [fileA, fileB] = window.nodeApi.getFilesStats([
+              const [fileA, fileB] = window.electronApi.getFilesStats([
                 res.path_a,
                 res.path_b,
               ]);
@@ -125,15 +125,39 @@ export default function SearchPage() {
     window.efficientIRApi.searchDupPairs(options);
   };
 
-  const onOpenImageFailed = useCallback(
-    async (path: string) => {
-      dispatch(
-        updateSearchDupPairsResFileStats({
-          path,
-          stats: { isDeleted: true },
-        }),
+  const renderImagePreviewWithErrorHandler = useCallback(
+    (path: string, innerChildren?: React.ReactNode) => {
+      const onImageOutdated = async (path: string) => {
+        dispatch(
+          updateSearchDupPairsResFileStats({
+            path,
+            stats: { isDeleted: true },
+          }),
+        );
+        window.electronApi.updateFileStatsCache(path, null);
+      };
+
+      return (
+        <ImagePreview
+          path={path}
+          onDelete={(error) => {
+            if (!error) onImageOutdated(path);
+          }}
+          onOpen={(error) => {
+            if (error) onImageOutdated(path);
+            document
+              .querySelectorAll(`a[data-path='${encodeURIComponent(path)}']`)
+              .forEach((element) => {
+                element.classList.add("link--visited");
+              });
+          }}
+          onReveal={(error) => {
+            if (error) onImageOutdated(path);
+          }}
+        >
+          {innerChildren}
+        </ImagePreview>
       );
-      window.nodeApi.updateFileStatsCache(path, null);
     },
     [dispatch],
   );
@@ -196,18 +220,16 @@ export default function SearchPage() {
 
       return (
         <div>
-          <ImagePreview path={value} onFailed={() => onOpenImageFailed(value)}>
+          {renderImagePreviewWithErrorHandler(
+            value,
             <a
-              className={`block ${isDeleted ? "!line-through" : ""}`}
-              data-path={value}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.currentTarget.classList.add("link--visited");
-              }}
+              className={`block${isDeleted ? " !line-through" : ""}`}
+              data-path={encodeURIComponent(value)}
+              onClick={(e) => e.stopPropagation()}
             >
               {renderedFilename}
-            </a>
-          </ImagePreview>
+            </a>,
+          )}
           <div className="mt-1 select-none">
             <Space>
               {isDeleted ? (
@@ -230,7 +252,7 @@ export default function SearchPage() {
         </div>
       );
     },
-    [onOpenImageFailed],
+    [renderImagePreviewWithErrorHandler],
   );
 
   const searchDupPairsResTableColumns: TableColumnsType<SearchDupPairsResRecord> =
@@ -393,16 +415,11 @@ export default function SearchPage() {
               }
             },
             expandedRowRender: (record) => {
+              const { path_a, path_b } = record;
               return (
                 <Space className="items-start" classNames={{ item: "flex-1" }}>
-                  <ImagePreview
-                    path={record.path_a}
-                    onFailed={() => onOpenImageFailed(record.path_a)}
-                  />
-                  <ImagePreview
-                    path={record.path_b}
-                    onFailed={() => onOpenImageFailed(record.path_b)}
-                  />
+                  {renderImagePreviewWithErrorHandler(path_a)}
+                  {renderImagePreviewWithErrorHandler(path_b)}
                 </Space>
               );
             },

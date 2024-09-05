@@ -55,7 +55,7 @@ export default function SearchTargetPage() {
         try {
           const parsedRes: SearchDupRes[] = JSON.parse(data);
           const parsedResRecord: SearchDupResRecord[] = parsedRes.map((res) => {
-            const [file] = window.nodeApi.getFilesStats([res.path]);
+            const [file] = window.electronApi.getFilesStats([res.path]);
             return {
               ...res,
               file: file ? file : { isDeleted: true },
@@ -101,7 +101,7 @@ export default function SearchTargetPage() {
       const path = selectFileRes.filePaths[0];
       setTargetImagePath(path);
 
-      const [stats] = window.nodeApi.getFilesStats([path]);
+      const [stats] = window.electronApi.getFilesStats([path]);
       setTargetImageStats(stats ?? { isDeleted: true });
 
       window.storeApi.setValue(CUSTOM_SEARCH_DUP_OPTIONS_KEY, options);
@@ -110,12 +110,35 @@ export default function SearchTargetPage() {
     }
   };
 
-  const onOpenImageFailed = useCallback(
-    async (path: string) => {
-      dispatch(
-        updateSearchDupResFileStats({ path, stats: { isDeleted: true } }),
+  const renderImagePreviewWithErrorHandler = useCallback(
+    (path: string, innerChildren?: React.ReactNode) => {
+      const onImageOutdated = async (path: string) => {
+        dispatch(
+          updateSearchDupResFileStats({ path, stats: { isDeleted: true } }),
+        );
+        window.electronApi.updateFileStatsCache(path, null);
+      };
+
+      return (
+        <ImagePreview
+          path={path}
+          onDelete={(error) => {
+            if (!error) onImageOutdated(path);
+          }}
+          onOpen={(error) => {
+            if (error) onImageOutdated(path);
+
+            document
+              .querySelector(`a[data-path='${encodeURIComponent(path)}']`)
+              ?.classList.add("link--visited");
+          }}
+          onReveal={(error) => {
+            if (error) onImageOutdated(path);
+          }}
+        >
+          {innerChildren}
+        </ImagePreview>
       );
-      window.nodeApi.updateFileStatsCache(path, null);
     },
     [dispatch],
   );
@@ -138,18 +161,16 @@ export default function SearchTargetPage() {
 
       return (
         <div>
-          <ImagePreview path={value} onFailed={() => onOpenImageFailed(value)}>
+          {renderImagePreviewWithErrorHandler(
+            value,
             <a
-              className={`block ${isDeleted ? "!line-through" : ""}`}
-              data-path={value}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.currentTarget.classList.add("link--visited");
-              }}
+              className={`block${isDeleted ? " !line-through" : ""}`}
+              data-path={encodeURIComponent(value)}
+              onClick={(e) => e.stopPropagation()}
             >
               {renderedFilename}
-            </a>
-          </ImagePreview>
+            </a>,
+          )}
           <div className="mt-1 select-none">
             <Space>
               {isDeleted ? (
@@ -172,7 +193,7 @@ export default function SearchTargetPage() {
         </div>
       );
     },
-    [onOpenImageFailed, targetImageStats],
+    [renderImagePreviewWithErrorHandler, targetImageStats],
   );
 
   const searchDupResTableColumns: TableColumnsType<SearchDupResRecord> =
@@ -190,12 +211,7 @@ export default function SearchTargetPage() {
           title: "Preview",
           width: "50%",
           render: (_, record) => {
-            return (
-              <ImagePreview
-                path={record.path}
-                onFailed={() => onOpenImageFailed(record.path)}
-              />
-            );
+            return renderImagePreviewWithErrorHandler(record.path);
           },
         },
         {
@@ -213,7 +229,7 @@ export default function SearchTargetPage() {
           sorter: (a, b) => a.sim - b.sim,
         },
       ],
-      [onOpenImageFailed, renderImagePath],
+      [renderImagePath, renderImagePreviewWithErrorHandler],
     );
 
   return (
@@ -265,10 +281,7 @@ export default function SearchTargetPage() {
                 return (
                   <div>
                     <code className="mb-2">{targetImagePath}</code>
-                    <ImagePreview
-                      path={targetImagePath}
-                      onFailed={() => onOpenImageFailed(targetImagePath)}
-                    />
+                    {renderImagePreviewWithErrorHandler(targetImagePath)}
                   </div>
                 );
               }}

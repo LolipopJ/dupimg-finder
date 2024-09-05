@@ -1,44 +1,75 @@
-import { Image } from "antd";
+import { Image, type ImageProps } from "antd";
 import { cloneElement, isValidElement } from "react";
 
-export interface ImagePreviewProps {
+import {
+  type DeleteImageOptions,
+  openImage,
+  type OpenImageOptions,
+  type RevealImageOptions,
+} from "../utils/image";
+import ImageDropdownMenu, {
+  type ImageDropdownMenuProps,
+} from "./image-dropdown-menu";
+
+export interface ImagePreviewProps
+  extends DeleteImageOptions,
+    OpenImageOptions,
+    RevealImageOptions {
   path: string;
-  onOpen?: () => void;
-  onFailed?: (error: string) => void;
+  dropdownMenuProps?: ImageDropdownMenuProps;
+  imageProps?: ImageProps;
   children?: React.ReactNode;
 }
 
 export const ImagePreview = (props: ImagePreviewProps) => {
-  const { path, onOpen, onFailed, children } = props;
+  const {
+    children,
+    path,
+    onDelete,
+    onOpen,
+    onReveal,
+    dropdownMenuProps,
+    imageProps,
+  } = props;
 
-  const openImage = async () => {
-    const error = await window.electronApi.openFile(path);
-    if (error) {
-      console.error(`Open file \`${path}\` failed:`, error);
-      onFailed?.(error);
-    } else {
-      onOpen?.();
-    }
+  const wrapWithDropdownMenu = (innerChildren: React.ReactNode) => {
+    return (
+      <ImageDropdownMenu
+        path={path}
+        onDelete={onDelete}
+        onOpen={onOpen}
+        onReveal={onReveal}
+        {...dropdownMenuProps}
+      >
+        {innerChildren}
+      </ImageDropdownMenu>
+    );
   };
 
   if (children && isValidElement(children)) {
-    return cloneElement(children, {
+    const clonedChildren = cloneElement(children, {
       // @ts-expect-error: wrap children with `onClick`
-      onClick: (event) => {
-        children.props.onClick?.(event);
-        openImage();
+      onClick: async (event) => {
+        await children.props.onClick?.(event);
+        await openImage({ path, onOpen });
       },
     });
+
+    return wrapWithDropdownMenu(clonedChildren);
   }
 
-  return (
+  return wrapWithDropdownMenu(
     <Image
       src={`media://${path}`}
       alt={path}
       className="cursor-pointer rounded-md"
       preview={false}
-      onClick={openImage}
-    />
+      {...imageProps}
+      onClick={async (event) => {
+        imageProps?.onClick?.(event);
+        await openImage({ path, onOpen });
+      }}
+    />,
   );
 };
 

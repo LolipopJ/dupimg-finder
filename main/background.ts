@@ -95,6 +95,24 @@ const efficientIRConfigPath = getEfficientIRConfigFilePath();
     return await shell.openPath(path);
   });
 
+  ipcMain.on(ElectronEvents.REVEAL_FILE, (event, path) => {
+    try {
+      shell.showItemInFolder(path);
+      event.returnValue = "";
+    } catch (error) {
+      event.returnValue = String(error);
+    }
+  });
+
+  ipcMain.handle(ElectronEvents.DELETE_FILE, async (_, path) => {
+    try {
+      await shell.trashItem(path);
+      return "";
+    } catch (error) {
+      return String(error);
+    }
+  });
+
   ipcMain.on(EfficientIREvents.GET_CONFIG, (event) => {
     event.returnValue = getEfficientIRConfig();
   });

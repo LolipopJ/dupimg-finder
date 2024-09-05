@@ -46,10 +46,10 @@ const storeApi = {
 };
 //#endregion
 
-//#region
+//#region ElectronApi
 const fileStatsCache: Record<string, Stats | null> = {};
 
-const nodeApi = {
+const electronApi = {
   getFilesStats: (paths: string[]): (Stats | null)[] => {
     return paths.map((path) => {
       try {
@@ -70,11 +70,6 @@ const nodeApi = {
   updateFileStatsCache: (path: string, stats: Stats | null) => {
     fileStatsCache[path] = stats;
   },
-};
-//#endregion
-
-//#region ElectronApi
-const electronApi = {
   selectDirectory: () =>
     ipcRenderer.invoke(
       ElectronEvents.SELECT_DIRECTORY,
@@ -85,6 +80,10 @@ const electronApi = {
     ) as Promise<OpenDialogReturnValue>,
   openFile: (path: string) =>
     ipcRenderer.invoke(ElectronEvents.OPEN_FILE, path) as Promise<string>,
+  revealFile: (path: string) =>
+    ipcRenderer.sendSync(ElectronEvents.REVEAL_FILE, path) as string,
+  deleteFile: (path: string) =>
+    ipcRenderer.invoke(ElectronEvents.DELETE_FILE, path) as Promise<string>,
 };
 //#endregion
 
@@ -125,12 +124,10 @@ const efficientIRApi = {
 
 contextBridge.exposeInMainWorld("ipc", ipc);
 contextBridge.exposeInMainWorld("storeApi", storeApi);
-contextBridge.exposeInMainWorld("nodeApi", nodeApi);
 contextBridge.exposeInMainWorld("electronApi", electronApi);
 contextBridge.exposeInMainWorld("efficientIRApi", efficientIRApi);
 
 export type Ipc = typeof ipc;
 export type StoreApi = typeof storeApi;
-export type NodeApi = typeof nodeApi;
 export type ElectronApi = typeof electronApi;
 export type EfficientIRApi = typeof efficientIRApi;
