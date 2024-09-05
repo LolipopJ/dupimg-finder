@@ -9,7 +9,6 @@ import {
   Checkbox,
   Form,
   FormProps,
-  Image,
   InputNumber,
   Space,
   Switch,
@@ -21,6 +20,7 @@ import {
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import ImagePreview from "../components/image-preview";
 import { DEFAULT_SEARCH_DUP_PAIRS_OPTIONS } from "../constants";
 import { EfficientIREvents, SpawnEvents } from "../enums";
 import type {
@@ -125,38 +125,17 @@ export default function SearchPage() {
     window.efficientIRApi.searchDupPairs(options);
   };
 
-  const onOpenImage = useCallback(
+  const onOpenImageFailed = useCallback(
     async (path: string) => {
-      const error = await window.electronApi.openFile(path);
-      if (error) {
-        console.error(`Open file \`${path}\` failed:`, error);
-
-        dispatch(
-          updateSearchDupPairsResFileStats({
-            path,
-            stats: { isDeleted: true },
-          }),
-        );
-        window.nodeApi.updateFileStatsCache(path, null);
-      }
-      return error;
+      dispatch(
+        updateSearchDupPairsResFileStats({
+          path,
+          stats: { isDeleted: true },
+        }),
+      );
+      window.nodeApi.updateFileStatsCache(path, null);
     },
     [dispatch],
-  );
-
-  const renderImagePreview = useCallback(
-    (path: string) => {
-      return (
-        <Image
-          src={`media://${path}`}
-          alt={path}
-          className="cursor-pointer rounded-md"
-          preview={false}
-          onClick={() => onOpenImage(path)}
-        />
-      );
-    },
-    [onOpenImage],
   );
 
   const renderImagePath = useCallback<
@@ -217,17 +196,18 @@ export default function SearchPage() {
 
       return (
         <div>
-          <a
-            className={`block ${isDeleted ? "!line-through" : ""}`}
-            data-path={value}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.currentTarget.classList.add("link--visited");
-              onOpenImage(value);
-            }}
-          >
-            {renderedFilename}
-          </a>
+          <ImagePreview path={value} onFailed={() => onOpenImageFailed(value)}>
+            <a
+              className={`block ${isDeleted ? "!line-through" : ""}`}
+              data-path={value}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.currentTarget.classList.add("link--visited");
+              }}
+            >
+              {renderedFilename}
+            </a>
+          </ImagePreview>
           <div className="mt-1 select-none">
             <Space>
               {isDeleted ? (
@@ -250,70 +230,73 @@ export default function SearchPage() {
         </div>
       );
     },
-    [onOpenImage],
+    [onOpenImageFailed],
   );
 
   const searchDupPairsResTableColumns: TableColumnsType<SearchDupPairsResRecord> =
-    [
-      {
-        key: "pathA",
-        title: "Image A",
-        dataIndex: "path_a",
-        render: renderImagePath,
-      },
-      {
-        key: "pathB",
-        title: "Image B",
-        dataIndex: "path_b",
-        render: renderImagePath,
-      },
-      {
-        key: "similarity",
-        title: "Similarity",
-        dataIndex: "sim",
-        align: "center",
-        render: (value) => {
-          return (
-            <span>
-              {Number(value).toFixed(2)} <small>%</small>
-            </span>
-          );
+    useMemo(
+      () => [
+        {
+          key: "pathA",
+          title: "Image A",
+          dataIndex: "path_a",
+          render: renderImagePath,
         },
-        defaultSortOrder: "descend",
-        sorter: (a, b) => a.sim - b.sim,
-      },
-      {
-        key: "actions",
-        title: "Actions",
-        align: "end",
-        render: (_, record) => {
-          const { path_a, path_b } = record;
-          const isIgnored = !!ignoredSearchDupPairs?.[path_a]?.[path_b];
-          return (
-            <Space onClick={(e) => e.stopPropagation()}>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => {
-                  if (isIgnored) {
-                    dispatch(
-                      removeIgnoredRecord({ pathA: path_a, pathB: path_b }),
-                    );
-                  } else {
-                    dispatch(
-                      addIgnoredRecord({ pathA: path_a, pathB: path_b }),
-                    );
-                  }
-                }}
-                danger={isIgnored}
-              >
-                {isIgnored ? "IGNORED" : "IGNORE"}
-              </Button>
-            </Space>
-          );
+        {
+          key: "pathB",
+          title: "Image B",
+          dataIndex: "path_b",
+          render: renderImagePath,
         },
-      },
-    ];
+        {
+          key: "similarity",
+          title: "Similarity",
+          dataIndex: "sim",
+          align: "center",
+          render: (value) => {
+            return (
+              <span>
+                {Number(value).toFixed(2)} <small>%</small>
+              </span>
+            );
+          },
+          defaultSortOrder: "descend",
+          sorter: (a, b) => a.sim - b.sim,
+        },
+        {
+          key: "actions",
+          title: "Actions",
+          align: "end",
+          render: (_, record) => {
+            const { path_a, path_b } = record;
+            const isIgnored = !!ignoredSearchDupPairs?.[path_a]?.[path_b];
+            return (
+              <Space onClick={(e) => e.stopPropagation()}>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                    if (isIgnored) {
+                      dispatch(
+                        removeIgnoredRecord({ pathA: path_a, pathB: path_b }),
+                      );
+                    } else {
+                      dispatch(
+                        addIgnoredRecord({ pathA: path_a, pathB: path_b }),
+                      );
+                    }
+                  }}
+                  danger={isIgnored}
+                >
+                  {isIgnored ? "IGNORED" : "IGNORE"}
+                </Button>
+              </Space>
+            );
+          },
+        },
+      ],
+      [dispatch, ignoredSearchDupPairs, renderImagePath],
+    );
 
   return (
     <>
@@ -412,13 +395,19 @@ export default function SearchPage() {
             expandedRowRender: (record) => {
               return (
                 <Space>
-                  {renderImagePreview(record.path_a)}
-                  {renderImagePreview(record.path_b)}
+                  <ImagePreview
+                    path={record.path_a}
+                    onFailed={() => onOpenImageFailed(record.path_a)}
+                  />
+                  <ImagePreview
+                    path={record.path_b}
+                    onFailed={() => onOpenImageFailed(record.path_b)}
+                  />
                 </Space>
               );
             },
-            rowExpandable: (record) =>
-              !record.fileA.isDeleted && !record.fileB.isDeleted,
+            // rowExpandable: (record) =>
+            //   !record.fileA.isDeleted && !record.fileB.isDeleted,
           }}
           pagination={{
             showSizeChanger: true,

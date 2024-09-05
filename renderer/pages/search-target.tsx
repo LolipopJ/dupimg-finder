@@ -8,7 +8,6 @@ import {
   Button,
   Form,
   FormProps,
-  Image,
   InputNumber,
   Popover,
   Space,
@@ -18,8 +17,9 @@ import {
   Tooltip,
 } from "antd";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import ImagePreview from "../components/image-preview";
 import { DEFAULT_SEARCH_DUP_OPTIONS } from "../constants";
 import { EfficientIREvents, SpawnEvents } from "../enums";
 import type {
@@ -110,114 +110,111 @@ export default function SearchTargetPage() {
     }
   };
 
-  const onOpenImage = async (path: string) => {
-    const error = await window.electronApi.openFile(path);
-    if (error) {
-      console.error(`Open file \`${path}\` failed:`, error);
-
+  const onOpenImageFailed = useCallback(
+    async (path: string) => {
       dispatch(
         updateSearchDupResFileStats({ path, stats: { isDeleted: true } }),
       );
       window.nodeApi.updateFileStatsCache(path, null);
-    }
-    return error;
-  };
+    },
+    [dispatch],
+  );
 
-  const renderImagePath: TableColumnType<SearchDupResRecord>["render"] = (
-    value,
-    record,
-  ) => {
-    const renderedFilename = String(value).replaceAll("\\", "/");
+  const renderImagePath = useCallback<
+    NonNullable<TableColumnType<SearchDupResRecord>["render"]>
+  >(
+    (value, record) => {
+      const renderedFilename = String(value).replaceAll("\\", "/");
 
-    const isDeleted = record.file.isDeleted;
-    const isEarlier =
-      record.file.birthtime && targetImageStats.birthtime
-        ? record.file.birthtime < targetImageStats.birthtime
-        : false;
-    const isLarger =
-      record.file.size && targetImageStats.size
-        ? record.file.size > targetImageStats.size
-        : false;
+      const isDeleted = record.file.isDeleted;
+      const isEarlier =
+        record.file.birthtime && targetImageStats.birthtime
+          ? record.file.birthtime < targetImageStats.birthtime
+          : false;
+      const isLarger =
+        record.file.size && targetImageStats.size
+          ? record.file.size > targetImageStats.size
+          : false;
 
-    return (
-      <div>
-        <a
-          className={`block ${isDeleted ? "!line-through" : ""}`}
-          data-path={value}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.currentTarget.classList.add("link--visited");
-            onOpenImage(value);
-          }}
-        >
-          {renderedFilename}
-        </a>
-        <div className="mt-1 select-none">
-          <Space>
-            {isDeleted ? (
-              <Tooltip title="Unable to fetch this image file, please consider updating index">
-                <WarningOutlined /> Outdated
-              </Tooltip>
-            ) : null}
-            {isEarlier ? (
-              <Tooltip title="This image file was created earlier">
-                <ClockCircleOutlined /> Earlier
-              </Tooltip>
-            ) : null}
-            {isLarger ? (
-              <Tooltip title="This image file's size is larger">
-                <FileImageOutlined /> Larger
-              </Tooltip>
-            ) : null}
-          </Space>
+      return (
+        <div>
+          <ImagePreview path={value} onFailed={() => onOpenImageFailed(value)}>
+            <a
+              className={`block ${isDeleted ? "!line-through" : ""}`}
+              data-path={value}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.currentTarget.classList.add("link--visited");
+              }}
+            >
+              {renderedFilename}
+            </a>
+          </ImagePreview>
+          <div className="mt-1 select-none">
+            <Space>
+              {isDeleted ? (
+                <Tooltip title="Unable to fetch this image file, please consider updating index">
+                  <WarningOutlined /> Outdated
+                </Tooltip>
+              ) : null}
+              {isEarlier ? (
+                <Tooltip title="This image file was created earlier">
+                  <ClockCircleOutlined /> Earlier
+                </Tooltip>
+              ) : null}
+              {isLarger ? (
+                <Tooltip title="This image file's size is larger">
+                  <FileImageOutlined /> Larger
+                </Tooltip>
+              ) : null}
+            </Space>
+          </div>
         </div>
-      </div>
-    );
-  };
+      );
+    },
+    [onOpenImageFailed, targetImageStats],
+  );
 
-  const renderImagePreview = (path: string) => {
-    return (
-      <Image
-        src={`media://${path}`}
-        alt={path}
-        className="cursor-pointer rounded-md"
-        preview={false}
-        onClick={() => onOpenImage(path)}
-      />
+  const searchDupResTableColumns: TableColumnsType<SearchDupResRecord> =
+    useMemo(
+      () => [
+        {
+          key: "path",
+          title: "Image",
+          dataIndex: "path",
+          className: "align-top",
+          render: renderImagePath,
+        },
+        {
+          key: "preview",
+          title: "Preview",
+          width: "50%",
+          render: (_, record) => {
+            return (
+              <ImagePreview
+                path={record.path}
+                onFailed={() => onOpenImageFailed(record.path)}
+              />
+            );
+          },
+        },
+        {
+          key: "similarity",
+          title: "Similarity",
+          dataIndex: "sim",
+          align: "center",
+          className: "align-top",
+          render: (value) => (
+            <span>
+              {Number(value).toFixed(2)} <small>%</small>
+            </span>
+          ),
+          defaultSortOrder: "descend",
+          sorter: (a, b) => a.sim - b.sim,
+        },
+      ],
+      [onOpenImageFailed, renderImagePath],
     );
-  };
-
-  const searchDupResTableColumns: TableColumnsType<SearchDupResRecord> = [
-    {
-      key: "path",
-      title: "Image",
-      dataIndex: "path",
-      className: "align-top",
-      render: renderImagePath,
-    },
-    {
-      key: "preview",
-      title: "Preview",
-      width: "50%",
-      render: (_, record) => {
-        return renderImagePreview(record.path);
-      },
-    },
-    {
-      key: "similarity",
-      title: "Similarity",
-      dataIndex: "sim",
-      align: "center",
-      className: "align-top",
-      render: (value) => (
-        <span>
-          {Number(value).toFixed(2)} <small>%</small>
-        </span>
-      ),
-      defaultSortOrder: "descend",
-      sorter: (a, b) => a.sim - b.sim,
-    },
-  ];
 
   return (
     <>
@@ -268,7 +265,10 @@ export default function SearchTargetPage() {
                 return (
                   <div>
                     <code className="mb-2">{targetImagePath}</code>
-                    <div>{renderImagePreview(targetImagePath)}</div>
+                    <ImagePreview
+                      path={targetImagePath}
+                      onFailed={() => onOpenImageFailed(targetImagePath)}
+                    />
                   </div>
                 );
               }}
