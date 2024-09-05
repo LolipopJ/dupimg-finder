@@ -394,7 +394,7 @@ export default function SearchPage() {
             },
             expandedRowRender: (record) => {
               return (
-                <Space>
+                <Space className="items-start" classNames={{ item: "flex-1" }}>
                   <ImagePreview
                     path={record.path_a}
                     onFailed={() => onOpenImageFailed(record.path_a)}
