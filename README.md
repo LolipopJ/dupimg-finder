@@ -6,6 +6,14 @@
 
 A tool to find **duplicate image pairs** or **the most similar images of target image** in your file system.
 
+## Why Write This?
+
+Like a hamster, I love browsing sites like Pixiv, X, etc., liking and saving the pictures that give me aesthetic pleasure. The problem is that some pictures are uploaded multiple times, and I only want to keep one copy.
+
+There are also multiple softwares that already meet my needs like [EfficientIR](https://github.com/Sg4Dylan/EfficientIR). As a front-end engineer, I want to re-implement it using modern front-end technologies while improving my native coding skills.
+
+That's why I write this software, hope it can save your problems! Pull requests are always welcomed!
+
 ## Support Platforms
 
 - `Windows`
