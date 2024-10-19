@@ -104,7 +104,7 @@ function App({ Component, pageProps }: AppProps) {
                     selectedKeys={menuSelectedKeys}
                     theme="dark"
                     mode="inline"
-                    className="h-full"
+                    className="h-full select-none"
                   />
                 </Layout.Sider>
 
