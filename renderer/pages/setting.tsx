@@ -1,4 +1,4 @@
-import { LoadingOutlined } from "@ant-design/icons";
+import { GithubOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useRequest } from "ahooks";
 import { Button, List } from "antd";
 import axios from "axios";
@@ -15,11 +15,10 @@ interface GithubRelease {
   name: string;
 }
 
-const currentVersion = window.electronApi.getSoftwareVersion();
-
-const indexesSize = window.electronApi.getIndexesSize();
-
 export default function SettingPage() {
+  const currentVersion = window.electronApi.getSoftwareVersion();
+  const indexesSize = window.electronApi.getIndexesSize();
+
   const {
     data: latestRelease,
     loading: getLatestReleaseLoading,
@@ -86,7 +85,7 @@ export default function SettingPage() {
       <Head>
         <title>Setting - Dupimg Finder</title>
       </Head>
-      <div>
+      <div className="flex h-full min-w-96 max-w-[960px] flex-col">
         <List<SettingItem>
           itemLayout="horizontal"
           dataSource={[versionSetting, indexesDirectorySetting]}
@@ -98,8 +97,17 @@ export default function SettingPage() {
               />
             </List.Item>
           )}
-          className="mx-auto min-w-64 max-w-[960px] rounded-lg border-2"
+          className="mx-auto w-full rounded-lg border-2"
         />
+        <div className="mt-auto flex items-center justify-center pt-8 text-4xl">
+          <GithubOutlined
+            onClick={() =>
+              window.electronApi.openExternalUrl(
+                "https://github.com/LolipopJ/dupimg-finder",
+              )
+            }
+          />
+        </div>
       </div>
     </>
   );
