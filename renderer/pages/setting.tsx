@@ -17,6 +17,8 @@ interface GithubRelease {
 
 const currentVersion = window.electronApi.getSoftwareVersion();
 
+const indexesSize = window.electronApi.getIndexesSize();
+
 export default function SettingPage() {
   const {
     data: latestRelease,
@@ -30,6 +32,55 @@ export default function SettingPage() {
     ).data as GithubRelease;
   });
 
+  const versionSetting: SettingItem = {
+    label: `Current version: ${currentVersion}`,
+    description: latestRelease ? `Latest version: ${latestRelease.name}` : "",
+    actions: [
+      <span key="updateSoftware">
+        {getLatestReleaseLoading ? (
+          <>
+            <LoadingOutlined /> Checking update...
+          </>
+        ) : getLatestReleaseError ? (
+          "Failed on checking update"
+        ) : latestRelease?.name === currentVersion ? (
+          "Current is latest version"
+        ) : (
+          <Button
+            type="link"
+            onClick={() =>
+              window.electronApi.openExternalUrl(
+                latestRelease?.html_url ??
+                  "https://github.com/LolipopJ/dupimg-finder/releases/latest",
+              )
+            }
+            className="px-0"
+          >
+            Open release page
+          </Button>
+        )}
+      </span>,
+    ],
+  };
+
+  const indexesDirectorySetting: SettingItem = {
+    label: "Indexes stats",
+    description:
+      indexesSize > 0
+        ? `Size: ${(indexesSize / 1024 / 1024).toFixed(2)} MB`
+        : "Get stats of indexes files failed",
+    actions: [
+      <Button
+        key="openIndexesDirectory"
+        type="link"
+        onClick={() => window.electronApi.openIndexesDirectory()}
+        className="px-0"
+      >
+        Open indexes directory
+      </Button>,
+    ],
+  };
+
   return (
     <>
       <Head>
@@ -38,38 +89,7 @@ export default function SettingPage() {
       <div>
         <List<SettingItem>
           itemLayout="horizontal"
-          dataSource={[
-            {
-              label: `软件版本：${currentVersion}`,
-              description: latestRelease
-                ? `最新版本：${latestRelease.name}`
-                : "",
-              actions: [
-                getLatestReleaseLoading ? (
-                  <>
-                    <LoadingOutlined /> 正在检查中...
-                  </>
-                ) : getLatestReleaseError ? (
-                  "检查更新失败"
-                ) : latestRelease?.name === currentVersion ? (
-                  "已是最新版本"
-                ) : (
-                  <Button
-                    key="openReleasePage"
-                    type="link"
-                    onClick={() =>
-                      window.electronApi.openExternalUrl(
-                        latestRelease?.html_url ??
-                          "https://github.com/LolipopJ/dupimg-finder/releases/latest",
-                      )
-                    }
-                  >
-                    前往更新
-                  </Button>
-                ),
-              ],
-            },
-          ]}
+          dataSource={[versionSetting, indexesDirectorySetting]}
           renderItem={(item) => (
             <List.Item actions={item.actions} className="mx-4 border-b-2">
               <List.Item.Meta

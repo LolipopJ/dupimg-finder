@@ -11,6 +11,8 @@ export enum ElectronEvents {
   DELETE_FILE = "electron:deleteFile",
   OPEN_EXTERNAL_URL = "electron:openExternalUrl",
   GET_SOFTWARE_VERSION = "electron:getSoftwareVersion",
+  GET_INDEXES_SIZE = "electron:getIndexesSize",
+  OPEN_INDEXES_DIRECTORY = "electron:openIndexesDirectory",
 }
 
 export enum EfficientIREvents {

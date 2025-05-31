@@ -18,6 +18,8 @@ export const EFFICIENTIR_DEFAULT_CONFIG_PATH = resolve(
 
 export const EFFICIENTIR_CONFIG_FILENAME = "efficientir-config.json";
 
+export const EFFICIENTIR_INDEXES_DIRNAME = "index";
+
 export const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "tiff", "bmp", "webp"];
 
 export const DEFAULT_SEARCH_DUP_OPTIONS: SearchDupOptions = {

@@ -7,9 +7,11 @@ import path from "path";
 import { EFFICIENTIR_BINARY_PATH, IMAGE_EXTENSIONS } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import {
+  calculateDirectorySize,
   createWindow,
   getEfficientIRConfig,
   getEfficientIRConfigFilePath,
+  getEfficientIRIndexesDirectory,
   runSpawn,
   updateEfficientIRConfig,
 } from "./helpers";
@@ -36,6 +38,7 @@ if (isProd) {
   app.setPath("userData", `${app.getPath("userData")} (development)`);
 }
 const efficientIRConfigPath = getEfficientIRConfigFilePath();
+const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
 
 (async () => {
   await app.whenReady();
@@ -132,6 +135,22 @@ const efficientIRConfigPath = getEfficientIRConfigFilePath();
     } catch (error) {
       event.returnValue = String(error);
     }
+  });
+
+  ipcMain.on(ElectronEvents.GET_INDEXES_SIZE, (event) => {
+    try {
+      event.returnValue = calculateDirectorySize(efficientIRIndexesDirectory);
+    } catch (error) {
+      console.error(
+        `An error occurred while calculating size of indexes:`,
+        String(error),
+      );
+      event.returnValue = 0;
+    }
+  });
+
+  ipcMain.handle(ElectronEvents.OPEN_INDEXES_DIRECTORY, async () => {
+    return await shell.openPath(efficientIRIndexesDirectory);
   });
 
   ipcMain.on(EfficientIREvents.GET_CONFIG, (event) => {

@@ -88,6 +88,12 @@ const electronApi = {
     ipcRenderer.sendSync(ElectronEvents.OPEN_EXTERNAL_URL, url) as string,
   getSoftwareVersion: () =>
     ipcRenderer.sendSync(ElectronEvents.GET_SOFTWARE_VERSION) as string,
+  getIndexesSize: () =>
+    ipcRenderer.sendSync(ElectronEvents.GET_INDEXES_SIZE) as number,
+  openIndexesDirectory: () =>
+    ipcRenderer.invoke(
+      ElectronEvents.OPEN_INDEXES_DIRECTORY,
+    ) as Promise<string>,
 };
 //#endregion
 

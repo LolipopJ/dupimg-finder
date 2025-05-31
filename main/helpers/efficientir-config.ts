@@ -5,11 +5,16 @@ import path from "path";
 import {
   EFFICIENTIR_CONFIG_FILENAME,
   EFFICIENTIR_DEFAULT_CONFIG_PATH,
+  EFFICIENTIR_INDEXES_DIRNAME,
 } from "../constants";
 import type { EfficientIRConfig } from "../interfaces";
 
 export const getEfficientIRConfigFilePath = () => {
   return path.join(app.getPath("userData"), EFFICIENTIR_CONFIG_FILENAME);
+};
+
+export const getEfficientIRIndexesDirectory = () => {
+  return path.join(app.getPath("userData"), EFFICIENTIR_INDEXES_DIRNAME);
 };
 
 export const getEfficientIRConfig = () => {
