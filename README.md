@@ -22,8 +22,8 @@ That's why I write this software, hope it can save your problems! Pull requests 
 
 [Download](https://github.com/LolipopJ/dupimg-finder/releases) and install the tool.
 
-1. `Home` page: add index paths that contain images.
-2. `Home` page: update index to generate the eigenvalues of images.
+1. `Indexes` page: add index paths that contain images.
+2. `Indexes` page: update index to generate the eigenvalues of images.
 3. Start a search progress using generated eigenvalues.
    - `Search` page: search duplicate image pairs.
    - `Search Target` page: search the most similar images of target image.

@@ -1,6 +1,12 @@
 import "../styles/globals.css";
 
 import {
+  HomeOutlined,
+  NodeIndexOutlined,
+  SearchOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+import {
   ConfigProvider as AntdConfigProvider,
   Layout,
   Menu,
@@ -25,21 +31,31 @@ type MenuItem = Required<MenuProps>["items"][number];
 const getItem = (
   label: React.ReactNode,
   key: React.Key,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
+  options?: Omit<NonNullable<MenuItem>, "label" | "key"> & {
+    icon?: JSX.Element;
+  },
 ) => {
   return {
+    ...options,
     key,
-    icon,
-    children,
     label,
   } as NonNullable<MenuItem>;
 };
 
 const menuItems = [
-  getItem(<Link href="/home">Home</Link>, "/home"),
-  getItem(<Link href="/search">Search</Link>, "/search"),
-  getItem(<Link href="/search-target">Search Target</Link>, "/search-target"),
+  getItem(<Link href="/home">Indexes</Link>, "/home", {
+    icon: <HomeOutlined />,
+  }),
+  getItem(<Link href="/search">Search</Link>, "/search", {
+    icon: <SearchOutlined />,
+  }),
+  getItem(<Link href="/search-target">Search Target</Link>, "/search-target", {
+    icon: <NodeIndexOutlined />,
+  }),
+  getItem(<Link href="/setting">Setting</Link>, "/setting", {
+    icon: <SettingOutlined />,
+    style: { marginTop: "auto" },
+  }),
 ];
 
 function StoreProvider({
@@ -104,7 +120,7 @@ function App({ Component, pageProps }: AppProps) {
                     selectedKeys={menuSelectedKeys}
                     theme="dark"
                     mode="inline"
-                    className="h-full select-none"
+                    className="flex h-full select-none flex-col"
                   />
                 </Layout.Sider>
 

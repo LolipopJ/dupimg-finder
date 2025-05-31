@@ -82,7 +82,7 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Home - Dupimg Finder</title>
+        <title>Indexes - Dupimg Finder</title>
       </Head>
       <div>
         <Space className="mb-4 w-full justify-end">
