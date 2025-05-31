@@ -84,6 +84,10 @@ const electronApi = {
     ipcRenderer.sendSync(ElectronEvents.REVEAL_FILE, path) as string,
   deleteFile: (path: string) =>
     ipcRenderer.invoke(ElectronEvents.DELETE_FILE, path) as Promise<string>,
+  openExternalUrl: (url: string) =>
+    ipcRenderer.sendSync(ElectronEvents.OPEN_EXTERNAL_URL, url) as string,
+  getSoftwareVersion: () =>
+    ipcRenderer.sendSync(ElectronEvents.GET_SOFTWARE_VERSION) as string,
 };
 //#endregion
 

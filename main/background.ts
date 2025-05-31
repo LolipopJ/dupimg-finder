@@ -1,6 +1,7 @@
 import { app, dialog, ipcMain, net, protocol, shell } from "electron";
 import serve from "electron-serve";
 import Store from "electron-store";
+import fs from "fs";
 import path from "path";
 
 import { EFFICIENTIR_BINARY_PATH, IMAGE_EXTENSIONS } from "./constants";
@@ -110,6 +111,26 @@ const efficientIRConfigPath = getEfficientIRConfigFilePath();
       return "";
     } catch (error) {
       return String(error);
+    }
+  });
+
+  ipcMain.on(ElectronEvents.OPEN_EXTERNAL_URL, (event, url) => {
+    try {
+      shell.openExternal(url);
+      event.returnValue = "";
+    } catch (error) {
+      event.returnValue = String(error);
+    }
+  });
+
+  ipcMain.on(ElectronEvents.GET_SOFTWARE_VERSION, (event) => {
+    try {
+      const packageJsonPath = path.join(app.getAppPath(), "package.json");
+      const packageJson = JSON.parse(String(fs.readFileSync(packageJsonPath)));
+      const version = String(packageJson.version);
+      event.returnValue = version.startsWith("v") ? version : `v${version}`;
+    } catch (error) {
+      event.returnValue = String(error);
     }
   });
 

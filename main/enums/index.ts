@@ -9,6 +9,8 @@ export enum ElectronEvents {
   OPEN_FILE = "electron:openFile",
   REVEAL_FILE = "electron:revealFile",
   DELETE_FILE = "electron:deleteFile",
+  OPEN_EXTERNAL_URL = "electron:openExternalUrl",
+  GET_SOFTWARE_VERSION = "electron:getSoftwareVersion",
 }
 
 export enum EfficientIREvents {
