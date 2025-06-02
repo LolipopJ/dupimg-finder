@@ -43,7 +43,7 @@ export default function SettingPage() {
         ) : getLatestReleaseError ? (
           "Failed on checking update"
         ) : latestRelease?.name === currentVersion ? (
-          "Current is latest version"
+          "You are using the latest version"
         ) : (
           <Button
             type="link"
@@ -85,7 +85,7 @@ export default function SettingPage() {
       <Head>
         <title>Setting - Dupimg Finder</title>
       </Head>
-      <div className="flex h-full min-w-96 max-w-[960px] flex-col">
+      <div className="mx-auto flex h-full min-w-96 max-w-[960px] flex-col">
         <List<SettingItem>
           itemLayout="horizontal"
           dataSource={[versionSetting, indexesDirectorySetting]}
