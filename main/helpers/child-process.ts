@@ -15,40 +15,43 @@ export const runExecSync = (cmd: string) => {
     return iconv.decode(Buffer.from(res, execEncoding), iconvDecoding);
   } catch (error) {
     console.error(`An error occurred while executing \`${cmd}\`.\n${error}`);
-    return "";
+    return String(error);
   }
 };
 
 export const runSpawn = (
   cmd: string,
   args: string[],
-  browserWindow: BrowserWindow,
-  spawnOptions: SpawnOptions,
+  browserWindow?: BrowserWindow,
+  spawnOptions?: SpawnOptions,
 ) => {
   const process = spawn(cmd, args);
-  browserWindow.webContents.send(SpawnEvents.SPAWN_STARTED, spawnOptions);
 
-  process.stdout.on("data", (data) => {
-    browserWindow.webContents.send(
-      SpawnEvents.SPAWN_STDOUT,
-      iconv.decode(Buffer.from(data, execEncoding), iconvDecoding),
-      spawnOptions,
-    );
-  });
+  if (browserWindow && spawnOptions) {
+    browserWindow.webContents.send(SpawnEvents.SPAWN_STARTED, spawnOptions);
 
-  process.stderr.on("data", (data) => {
-    browserWindow.webContents.send(
-      SpawnEvents.SPAWN_STDERR,
-      iconv.decode(Buffer.from(data, execEncoding), iconvDecoding),
-      spawnOptions,
-    );
-  });
+    process.stdout.on("data", (data) => {
+      browserWindow.webContents.send(
+        SpawnEvents.SPAWN_STDOUT,
+        iconv.decode(Buffer.from(data, execEncoding), iconvDecoding),
+        spawnOptions,
+      );
+    });
 
-  process.on("close", (code) => {
-    browserWindow.webContents.send(
-      SpawnEvents.SPAWN_FINISHED,
-      code ?? 0,
-      spawnOptions,
-    );
-  });
+    process.stderr.on("data", (data) => {
+      browserWindow.webContents.send(
+        SpawnEvents.SPAWN_STDERR,
+        iconv.decode(Buffer.from(data, execEncoding), iconvDecoding),
+        spawnOptions,
+      );
+    });
+
+    process.on("close", (code) => {
+      browserWindow.webContents.send(
+        SpawnEvents.SPAWN_FINISHED,
+        code ?? 0,
+        spawnOptions,
+      );
+    });
+  }
 };

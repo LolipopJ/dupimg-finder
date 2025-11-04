@@ -20,6 +20,7 @@ export enum EfficientIREvents {
   UPDATE_CONFIG = "efficientIR:updateConfig",
   UPDATE_INDEX = "efficientIR:updateIndex",
   UPDATE_ALL_INDEX = "efficientIR:updateAllIndex",
+  CANCEL_PROCESS = "efficientIR:cancelProcess",
   SEARCH_DUP_PAIRS = "efficientIR:searchDupPairs",
   SEARCH_DUP_IMG_OF_TARGET = "efficientIR:searchDupImgOfTarget",
 }

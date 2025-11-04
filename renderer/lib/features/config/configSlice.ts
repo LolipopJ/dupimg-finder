@@ -105,6 +105,9 @@ export const configSlice = createSlice({
       });
       window.storeApi.setValue(INDEX_LAST_UPDATED_KEY, indexLastUpdatedRecord);
     },
+    cancelProcess: () => {
+      window.efficientIRApi.cancelProcess();
+    },
   },
 });
 
@@ -113,6 +116,7 @@ export const {
   addIndexRecord,
   removeIndexRecord,
   updateIndexRecord,
+  cancelProcess,
 } = configSlice.actions;
 
 export default configSlice.reducer;

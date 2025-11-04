@@ -3,11 +3,13 @@ import {
   CloseCircleOutlined,
   LoadingOutlined,
 } from "@ant-design/icons";
-import { Modal } from "antd";
+import { Button, Modal } from "antd";
 import { useEffect, useState } from "react";
 
 import { SpawnEvents } from "../enums";
 import type { SpawnOptions } from "../interfaces";
+import { cancelProcess } from "../lib/features/config/configSlice";
+import { useAppDispatch } from "../lib/hooks";
 
 const SPAWN_LOG_MAX_LENGTH = 2000;
 
@@ -15,8 +17,11 @@ export const SpawnDialog = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
+  const [cancelable, setStoppable] = useState<boolean>(false);
   const [dialogTitle, setDialogTitle] = useState<string>("Spawn log");
   const [dialogContent, setDialogContent] = useState<string>("");
+
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const cleanupSpawnStarted = window.ipc.on(
@@ -25,6 +30,7 @@ export const SpawnDialog = () => {
       (options: SpawnOptions) => {
         setLoading(true);
         setError(false);
+        setStoppable(!!options.cancelable);
         setDialogTitle(options.title);
         setDialogContent("");
         setOpen(true);
@@ -92,10 +98,18 @@ export const SpawnDialog = () => {
     }
   };
 
+  const onStop = () => {
+    if (loading) {
+      dispatch(cancelProcess());
+      setLoading(false);
+      setError(true);
+    }
+  };
+
   return (
     <Modal
       title={
-        <span
+        <div
           className={`${loading ? "" : error ? "text-red-600" : "text-green-600"}`}
         >
           <span className="mr-2">
@@ -108,9 +122,21 @@ export const SpawnDialog = () => {
             )}
           </span>
           {dialogTitle}
-        </span>
+          {cancelable ? (
+            <Button
+              className="ml-2"
+              size="small"
+              type="link"
+              danger
+              onClick={onStop}
+              disabled={!loading}
+            >
+              {loading ? "CANCEL" : "CANCELED"}
+            </Button>
+          ) : null}
+        </div>
       }
-      className={`spawn-modal ${loading ? "" : error ? "spawn-modal--error" : "spawn-modal--success"}`}
+      className={`spawn-modal ${loading ? "spawn-modal--loading" : error ? "spawn-modal--error" : "spawn-modal--success"}`}
       open={open}
       closable={!loading}
       maskClosable={!loading}

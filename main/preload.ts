@@ -114,6 +114,9 @@ const efficientIRApi = {
   updateAllIndex: () => {
     ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, ["--update_index"]);
   },
+  cancelProcess: () => {
+    ipcRenderer.send(EfficientIREvents.CANCEL_PROCESS);
+  },
   searchDupPairs: (options?: SearchDupPairsOptions) => {
     const { threshold, sameDir } = options ?? DEFAULT_SEARCH_DUP_PAIRS_OPTIONS;
     ipcRenderer.send(EfficientIREvents.SEARCH_DUP_PAIRS, [

@@ -12,6 +12,7 @@ import {
   getEfficientIRConfig,
   getEfficientIRConfigFilePath,
   getEfficientIRIndexesDirectory,
+  runExecSync,
   runSpawn,
   updateEfficientIRConfig,
 } from "./helpers";
@@ -164,12 +165,13 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
   ipcMain.on(EfficientIREvents.UPDATE_INDEX, (_, args) => {
     runSpawn(
       EFFICIENTIR_BINARY_PATH,
-      [...args, ...["--config_path", efficientIRConfigPath]],
+      [...args, `--config_path ${efficientIRConfigPath}`],
       mainWindow,
       {
         key: EfficientIREvents.UPDATE_INDEX,
         title: "Update Index",
         pipe: "stderr",
+        cancelable: true,
       },
     );
   });
@@ -177,20 +179,27 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
   ipcMain.on(EfficientIREvents.UPDATE_ALL_INDEX, (_, args) => {
     runSpawn(
       EFFICIENTIR_BINARY_PATH,
-      [...args, ...["--config_path", efficientIRConfigPath]],
+      [...args, `--config_path ${efficientIRConfigPath}`],
       mainWindow,
       {
         key: EfficientIREvents.UPDATE_ALL_INDEX,
         title: "Update All Index",
         pipe: "stderr",
+        cancelable: true,
       },
+    );
+  });
+
+  ipcMain.on(EfficientIREvents.CANCEL_PROCESS, (event) => {
+    event.returnValue = runExecSync(
+      `${EFFICIENTIR_BINARY_PATH} --cancel_process`,
     );
   });
 
   ipcMain.on(EfficientIREvents.SEARCH_DUP_PAIRS, (_, args) => {
     runSpawn(
       EFFICIENTIR_BINARY_PATH,
-      [...args, ...["--config_path", efficientIRConfigPath]],
+      [...args, `--config_path ${efficientIRConfigPath}`],
       mainWindow,
       {
         key: EfficientIREvents.SEARCH_DUP_PAIRS,
@@ -203,7 +212,7 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
   ipcMain.on(EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET, (_, args) => {
     runSpawn(
       EFFICIENTIR_BINARY_PATH,
-      [...args, ...["--config_path", efficientIRConfigPath]],
+      [...args, `--config_path ${efficientIRConfigPath}`],
       mainWindow,
       {
         key: EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET,

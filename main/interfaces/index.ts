@@ -14,6 +14,7 @@ export interface SpawnOptions {
   title: string;
   receiveData?: "append" | "replace";
   pipe?: "stdout" | "stderr";
+  cancelable?: boolean;
 }
 
 export interface SearchDupOptions {
