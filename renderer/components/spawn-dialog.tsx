@@ -131,7 +131,7 @@ export const SpawnDialog = () => {
               onClick={onStop}
               disabled={!loading}
             >
-              {loading ? "CANCEL" : "CANCELED"}
+              {loading ? "CANCEL" : error ? "CANCELED" : "FULFILLED"}
             </Button>
           ) : null}
         </div>
