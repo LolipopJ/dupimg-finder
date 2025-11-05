@@ -46,6 +46,7 @@ export default function SearchPage() {
     searchDupPairsResExpandedRowKeys,
     setSearchDupPairsResExpandedRowKeys,
   ] = useState<string[]>([]);
+  const [ctrlPressed, setCtrlPressed] = useState(false);
 
   const searchDupPairsRes = useAppSelector(
     (state) => state.searchDupPairsRes.value,
@@ -110,6 +111,28 @@ export default function SearchPage() {
       cleanupSpawnFinished();
     };
   }, [dispatch]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      setCtrlPressed(e.ctrlKey || e.metaKey);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      setCtrlPressed(e.ctrlKey || e.metaKey);
+    };
+    const onBlur = () => {
+      setCtrlPressed(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
 
   const initialSearchDupPairsOptions: SearchDupPairsOptions =
     window.storeApi.getValue(CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY) ??
@@ -346,7 +369,9 @@ export default function SearchPage() {
           <Space className="ml-auto items-start">
             <Form.Item name="sameDir" valuePropName="checked">
               <Checkbox className="select-none" disabled={loading}>
-                Compare images of same directory
+                <Tooltip title="Only compare images in same directory">
+                  Same directory
+                </Tooltip>
               </Checkbox>
             </Form.Item>
             <Form.Item
@@ -417,7 +442,10 @@ export default function SearchPage() {
             expandedRowRender: (record) => {
               const { path_a, path_b } = record;
               return (
-                <Space className="items-start" classNames={{ item: "flex-1" }}>
+                <Space
+                  className={`items-start ${ctrlPressed ? "flex-row-reverse" : ""}`}
+                  classNames={{ item: "w-1/2" }}
+                >
                   {renderImagePreviewWithErrorHandler(path_a)}
                   {renderImagePreviewWithErrorHandler(path_b)}
                 </Space>
