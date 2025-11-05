@@ -3,7 +3,7 @@ import {
   CloseCircleOutlined,
   LoadingOutlined,
 } from "@ant-design/icons";
-import { Button, Modal } from "antd";
+import { Button, Modal, Popconfirm } from "antd";
 import { useEffect, useState } from "react";
 
 import { SpawnEvents } from "../enums";
@@ -123,16 +123,20 @@ export const SpawnDialog = () => {
           </span>
           {dialogTitle}
           {cancelable ? (
-            <Button
-              className="ml-2"
-              size="small"
-              type="link"
-              danger
-              onClick={onStop}
-              disabled={!loading}
+            <Popconfirm
+              title="Are you sure to cancel the process?"
+              onConfirm={onStop}
             >
-              {loading ? "CANCEL" : error ? "CANCELED" : "FULFILLED"}
-            </Button>
+              <Button
+                className="ml-2"
+                size="small"
+                type="link"
+                danger
+                disabled={!loading}
+              >
+                {loading ? "CANCEL" : error ? "CANCELED" : "FULFILLED"}
+              </Button>
+            </Popconfirm>
           ) : null}
         </div>
       }
