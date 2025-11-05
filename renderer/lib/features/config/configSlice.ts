@@ -18,6 +18,11 @@ const initialState = {
 
 const INDEX_LAST_UPDATED_KEY = "index-state-last-updated";
 
+export interface UpdateIndexRecordPayload {
+  dirs?: IndexRecord["path"][];
+  checkMeta?: boolean;
+}
+
 export const configSlice = createSlice({
   name: "config",
   initialState: initialState,
@@ -81,23 +86,23 @@ export const configSlice = createSlice({
        * When passed parameter is of `Array` type, update target index records.
        * Otherwise, update all index records.
        */
-      action: PayloadAction<IndexRecord["path"][] | undefined>,
+      action: PayloadAction<UpdateIndexRecordPayload>,
     ) => {
       const currentDateLocaleString = new Date().toLocaleString();
       const indexLastUpdatedRecord =
         window.storeApi.getValue(INDEX_LAST_UPDATED_KEY) ?? {};
 
-      const payload = action.payload;
-      const isUpdateAllIndex = !Array.isArray(payload);
+      const { dirs = [], checkMeta = false } = action.payload;
+      const isUpdateAllIndex = dirs.length === 0;
       if (isUpdateAllIndex) {
-        window.efficientIRApi.updateAllIndex();
+        window.efficientIRApi.updateAllIndex({ checkMeta });
       } else {
-        window.efficientIRApi.updateIndex(payload);
+        window.efficientIRApi.updateIndex(dirs, { checkMeta });
       }
 
       state.indexRecord = state.indexRecord.map((record) => {
         const path = record.path;
-        if (isUpdateAllIndex || payload.includes(path)) {
+        if (isUpdateAllIndex || dirs.includes(path)) {
           record.lastUpdated = currentDateLocaleString;
           indexLastUpdatedRecord[path] = currentDateLocaleString;
         }

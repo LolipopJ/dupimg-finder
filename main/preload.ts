@@ -103,16 +103,26 @@ const efficientIRApi = {
     ipcRenderer.sendSync(EfficientIREvents.GET_CONFIG) as EfficientIRConfig,
   updateConfig: (newConfig: EfficientIRConfig) =>
     ipcRenderer.send(EfficientIREvents.UPDATE_CONFIG, newConfig),
-  updateIndex: (indexDir: string[]) => {
+  updateIndex: (
+    dirs: string[],
+    { checkMeta = false }: { checkMeta?: boolean },
+  ) => {
     const args: string[] = [];
-    indexDir.forEach((dir) => {
+    dirs.forEach((dir) => {
       args.push("--update_index_dir");
       args.push(dir);
     });
+    if (checkMeta) {
+      args.push("--check_meta");
+    }
     ipcRenderer.send(EfficientIREvents.UPDATE_INDEX, args);
   },
-  updateAllIndex: () => {
-    ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, ["--update_index"]);
+  updateAllIndex: ({ checkMeta = false }: { checkMeta?: boolean }) => {
+    const args = ["--update_index"];
+    if (checkMeta) {
+      args.push("--check_meta");
+    }
+    ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, args);
   },
   cancelProcess: () => {
     ipcRenderer.send(EfficientIREvents.CANCEL_PROCESS);

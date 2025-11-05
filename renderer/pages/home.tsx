@@ -1,5 +1,16 @@
-import { FolderAddOutlined, SyncOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Space, Table, type TableColumnsType } from "antd";
+import {
+  FolderAddOutlined,
+  MoreOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
+import {
+  Button,
+  Dropdown,
+  Popconfirm,
+  Space,
+  Table,
+  type TableColumnsType,
+} from "antd";
 import Head from "next/head";
 import { useState } from "react";
 
@@ -8,6 +19,7 @@ import {
   addIndexRecord,
   removeIndexRecord,
   updateIndexRecord,
+  type UpdateIndexRecordPayload,
 } from "../lib/features/config/configSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
 
@@ -28,9 +40,12 @@ export default function HomePage() {
     dispatch(removeIndexRecord(paths));
   };
 
-  const onUpdateIndex = (paths?: IndexRecord["path"][]) => {
+  const onUpdateIndex = ({
+    dirs,
+    checkMeta,
+  }: UpdateIndexRecordPayload = {}) => {
     setUpdateIndexRecordLoading(true);
-    dispatch(updateIndexRecord(paths));
+    dispatch(updateIndexRecord({ dirs, checkMeta }));
     setUpdateIndexRecordLoading(false);
   };
 
@@ -39,6 +54,11 @@ export default function HomePage() {
       key: "path",
       title: "Path",
       dataIndex: "path",
+      render: (value) => (
+        <a title={value} onClick={() => window.electronApi.openFile(value)}>
+          {value}
+        </a>
+      ),
     },
     {
       key: "lastUpdated",
@@ -55,7 +75,7 @@ export default function HomePage() {
             <Button
               type="link"
               size="small"
-              onClick={() => onUpdateIndex([record.path])}
+              onClick={() => onUpdateIndex({ dirs: [record.path] })}
               loading={updateIndexRecordLoading}
             >
               UPDATE
@@ -89,18 +109,24 @@ export default function HomePage() {
           <Button onClick={onAddIndex} icon={<FolderAddOutlined />}>
             ADD INDEX
           </Button>
-          <Popconfirm
-            title="Confirm to update all index? This may take a long time."
-            onConfirm={() => onUpdateIndex()}
+          <Dropdown.Button
+            type="primary"
+            onClick={() => onUpdateIndex()}
+            icon={<MoreOutlined />}
+            menu={{
+              items: [
+                {
+                  key: "update",
+                  label: "Update All Existing Index",
+                  onClick: () => onUpdateIndex({ checkMeta: true }),
+                },
+              ],
+            }}
+            loading={updateIndexRecordLoading}
           >
-            <Button
-              type="primary"
-              icon={<SyncOutlined />}
-              loading={updateIndexRecordLoading}
-            >
-              UPDATE ALL INDEX
-            </Button>
-          </Popconfirm>
+            <SyncOutlined />
+            UPDATE ALL INDEX
+          </Dropdown.Button>
         </Space>
         <Table
           columns={indexRecordTableColumns}
