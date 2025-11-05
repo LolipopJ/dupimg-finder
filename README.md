@@ -30,23 +30,18 @@ That's why I write this software, hope it can save your problems! Pull requests 
 
 ## Performance
 
-Generate eigenvalues for approximately 50,000 images (≈ 170GB) takes:
+Dupimg Finder now supports indexing with multiple work processes, default to 4.
 
-| Image Processing Model | Device Type | Device Model | Time Consuming              |
-| ---------------------- | ----------- | ------------ | --------------------------- |
-| `EfficientNet-B2`      | CPU         | `i5-12600KF` | 90min (with 1 work process) |
+| Image Processing Model | CPU Model           | Image Size                             | Time Consuming                | Software Version |
+| ---------------------- | ------------------- | -------------------------------------- | ----------------------------- | ---------------- |
+| `EfficientNet-B2`      | `Inter i5-12600KF`  | approximately 50,000 images (≈ 170GB)  | 90min (with 1 work process)   | dev              |
+| `EfficientNet-B2`      | `AMD Ryzen 5 9600X` | approximately 100,000 images (≈ 380GB) | 55min (with 4 work processes) | v1.3.0           |
 
-## Developer
+## Develop
 
-### Frontend Dependencies
+### Backend
 
-```bash
-yarn
-```
-
-### Backend Binary
-
-Python environment is required. Tested successfully on `python==3.12.4`.
+Python environment is required. Binary is built successfully on `python==3.12.4`.
 
 ```bash
 cd EfficientIR
@@ -55,13 +50,23 @@ pip install -r requirements.txt
 pyinstaller build_nogui.spec
 ```
 
-### Development
+### Frontend
+
+If you need to run index or search actions, [prepare backend binary](#backend) first.
+
+#### Install Dependencies
+
+```bash
+yarn
+```
+
+#### Development
 
 ```bash
 yarn dev
 ```
 
-### Lint
+#### Lint
 
 ```bash
 yarn lint
@@ -70,7 +75,7 @@ yarn lint
 yarn lint --fix
 ```
 
-### Production
+#### Production
 
 ```bash
 yarn build
