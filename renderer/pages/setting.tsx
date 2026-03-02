@@ -83,7 +83,7 @@ export default function SettingPage() {
   return (
     <>
       <Head>
-        <title>Setting - Dupimg Finder</title>
+        <title>Setting - Duplicate Images Finder</title>
       </Head>
       <div className="mx-auto flex h-full min-w-96 max-w-[960px] flex-col">
         <List<SettingItem>

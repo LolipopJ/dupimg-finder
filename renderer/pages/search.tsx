@@ -346,7 +346,7 @@ export default function SearchPage() {
   return (
     <>
       <Head>
-        <title>Search Duplicate Images - Dupimg Finder</title>
+        <title>Search Duplicate Images - Duplicate Images Finder</title>
       </Head>
       <div>
         <Form<SearchDupPairsOptions>

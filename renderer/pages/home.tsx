@@ -102,12 +102,12 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Indexes - Dupimg Finder</title>
+        <title>Indexes - Duplicate Images Finder</title>
       </Head>
       <div>
         <Space className="mb-4 w-full justify-end">
           <Button onClick={onAddIndex} icon={<FolderAddOutlined />}>
-            ADD INDEX
+            ADD DIRECTORY
           </Button>
           <Dropdown.Button
             type="primary"
@@ -125,7 +125,7 @@ export default function HomePage() {
             loading={updateIndexRecordLoading}
           >
             <SyncOutlined />
-            UPDATE ALL INDEX
+            UPDATE ALL INDEXES
           </Dropdown.Button>
         </Space>
         <Table

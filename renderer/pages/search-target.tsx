@@ -235,7 +235,9 @@ export default function SearchTargetPage() {
   return (
     <>
       <Head>
-        <title>Search Duplicate Images of Target - Dupimg Finder</title>
+        <title>
+          Search Duplicate Images of Target - Duplicate Images Finder
+        </title>
       </Head>
       <div>
         <Form<SearchDupOptions>

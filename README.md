@@ -1,4 +1,4 @@
-# dupimg-finder / 重复图像查找工具
+# Duplicate Images Finder / 重复图像查找工具
 
 ![search-duplicate-images](./docs/search-duplicate-images.png)
 
@@ -30,7 +30,7 @@ That's why I write this software, hope it can save your problems! Pull requests 
 
 ## Performance
 
-Dupimg Finder now supports indexing with multiple work processes, default to 4.
+Duplicate Images Finder now supports indexing with multiple work processes, default to 4.
 
 | Image Processing Model | CPU Model           | Image Size                             | Time Consuming                | Software Version |
 | ---------------------- | ------------------- | -------------------------------------- | ----------------------------- | ---------------- |
