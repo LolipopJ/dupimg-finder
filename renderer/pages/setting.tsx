@@ -1,8 +1,11 @@
 import { GithubOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useRequest } from "ahooks";
-import { Button, List } from "antd";
+import { Button, InputNumber, List } from "antd";
 import axios from "axios";
 import Head from "next/head";
+import { useState } from "react";
+
+import { DEFAULT_MAX_PROCESS, MIN_MAX_PROCESS } from "../constants";
 
 interface SettingItem {
   label: string;
@@ -18,6 +21,10 @@ interface GithubRelease {
 export default function SettingPage() {
   const currentVersion = window.electronApi.getSoftwareVersion();
   const indexesSize = window.electronApi.getIndexesSize();
+
+  const [maxProcess, setMaxProcess] = useState<number>(
+    window.storeApi.getValue("max-process") ?? DEFAULT_MAX_PROCESS,
+  );
 
   const {
     data: latestRelease,
@@ -80,6 +87,25 @@ export default function SettingPage() {
     ],
   };
 
+  const workersSetting: SettingItem = {
+    label: "Workers",
+    description: "Number of parallel processes used when updating indexes",
+    actions: [
+      <InputNumber
+        key="maxProcess"
+        min={MIN_MAX_PROCESS}
+        step={1}
+        precision={0}
+        value={maxProcess}
+        onChange={(value) => {
+          const val = value ?? DEFAULT_MAX_PROCESS;
+          setMaxProcess(val);
+          window.storeApi.setValue("max-process", val);
+        }}
+      />,
+    ],
+  };
+
   return (
     <>
       <Head>
@@ -88,7 +114,7 @@ export default function SettingPage() {
       <div className="mx-auto flex h-full min-w-96 max-w-[960px] flex-col">
         <List<SettingItem>
           itemLayout="horizontal"
-          dataSource={[versionSetting, indexesDirectorySetting]}
+          dataSource={[versionSetting, workersSetting, indexesDirectorySetting]}
           renderItem={(item) => (
             <List.Item actions={item.actions} className="mx-4 border-b-2">
               <List.Item.Meta

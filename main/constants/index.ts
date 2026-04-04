@@ -28,3 +28,7 @@ export const DEFAULT_SEARCH_DUP_PAIRS_OPTIONS: SearchDupPairsOptions = {
   threshold: 98.5,
   sameDir: true,
 };
+
+export const MAX_PROCESS_STORE_KEY = "max-process";
+export const DEFAULT_MAX_PROCESS = 4;
+export const MIN_MAX_PROCESS = 1;

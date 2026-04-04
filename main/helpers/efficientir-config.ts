@@ -42,8 +42,6 @@ export const getEfficientIRConfig = () => {
   ) as EfficientIRConfig;
 
   if (efficientIRConfig.config_version === 1) {
-    delete efficientIRConfig.metainfo_path;
-    delete efficientIRConfig.exists_index_path;
     efficientIRConfig.combined_index_path = path.join(
       userDataPath,
       "index/combined_index.json",

@@ -7,8 +7,10 @@ import {
 import fs, { type Stats } from "fs";
 
 import {
+  DEFAULT_MAX_PROCESS,
   DEFAULT_SEARCH_DUP_OPTIONS,
   DEFAULT_SEARCH_DUP_PAIRS_OPTIONS,
+  MAX_PROCESS_STORE_KEY,
 } from "./constants";
 import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
 import type {
@@ -107,6 +109,9 @@ const efficientIRApi = {
     dirs: string[],
     { checkMeta = false }: { checkMeta?: boolean },
   ) => {
+    const maxProcess: number =
+      ipcRenderer.sendSync(StoreEvents.GET_VALUE, MAX_PROCESS_STORE_KEY) ??
+      DEFAULT_MAX_PROCESS;
     const args: string[] = [];
     dirs.forEach((dir) => {
       args.push("--update_index_dir");
@@ -115,13 +120,20 @@ const efficientIRApi = {
     if (checkMeta) {
       args.push("--check_meta");
     }
+    args.push("--max_process");
+    args.push(String(maxProcess));
     ipcRenderer.send(EfficientIREvents.UPDATE_INDEX, args);
   },
   updateAllIndex: ({ checkMeta = false }: { checkMeta?: boolean }) => {
+    const maxProcess: number =
+      ipcRenderer.sendSync(StoreEvents.GET_VALUE, MAX_PROCESS_STORE_KEY) ??
+      DEFAULT_MAX_PROCESS;
     const args = ["--update_index"];
     if (checkMeta) {
       args.push("--check_meta");
     }
+    args.push("--max_process");
+    args.push(String(maxProcess));
     ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, args);
   },
   cancelProcess: () => {
