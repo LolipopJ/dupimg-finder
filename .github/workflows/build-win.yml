@@ -32,7 +32,7 @@ jobs:
       - name: build EfficientIR
         run: |
           cd EfficientIR
-          pyinstaller build_nogui.spec
+          pyinstaller build.spec
       - name: install Node.js
         uses: actions/setup-node@v4
         with:

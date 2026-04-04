@@ -2,9 +2,7 @@ import { resolve } from "path";
 
 import type { SearchDupOptions, SearchDupPairsOptions } from "../interfaces";
 
-export const EFFICIENTIR_DIR_PATH = resolve(
-  "EfficientIR/dist/EfficientIR_nogui",
-);
+export const EFFICIENTIR_DIR_PATH = resolve("EfficientIR/dist/EfficientIR");
 
 export const EFFICIENTIR_BINARY_PATH = resolve(
   EFFICIENTIR_DIR_PATH,
@@ -13,7 +11,7 @@ export const EFFICIENTIR_BINARY_PATH = resolve(
 
 export const EFFICIENTIR_DEFAULT_CONFIG_PATH = resolve(
   EFFICIENTIR_DIR_PATH,
-  "nogui/config.json",
+  "config.json",
 );
 
 export const EFFICIENTIR_CONFIG_FILENAME = "efficientir-config.json";

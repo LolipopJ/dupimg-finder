@@ -2,8 +2,11 @@ export interface EfficientIRConfig {
   config_version: number;
   img_size: number;
   index_capacity: number;
-  metainfo_path: string;
-  exists_index_path: string;
+  /** @deprecated Merged into `combined_index_path` */
+  metainfo_path?: string;
+  /** @deprecated Merged into `combined_index_path` */
+  exists_index_path?: string;
+  combined_index_path: string;
   index_path: string;
   model_path: string;
   search_dir: string[];

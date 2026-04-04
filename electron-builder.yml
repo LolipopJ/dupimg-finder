@@ -11,10 +11,8 @@ files:
       - package.json
       - app
 extraResources:
-  - from: EfficientIR/dist/EfficientIR_nogui
-    to: ../EfficientIR/dist/EfficientIR_nogui
-    filter:
-      - '!models/ofa-sim.onnx'
+  - from: EfficientIR/dist/EfficientIR
+    to: ../EfficientIR/dist/EfficientIR
 win:
   target:
     - nsis
