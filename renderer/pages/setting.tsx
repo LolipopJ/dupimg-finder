@@ -8,8 +8,8 @@ import { useState } from "react";
 import { DEFAULT_MAX_PROCESS, MIN_MAX_PROCESS } from "../constants";
 
 interface SettingItem {
-  label: string;
-  description?: string;
+  label: React.ReactNode;
+  description?: React.ReactNode;
   actions: React.ReactNode[];
 }
 
@@ -39,18 +39,18 @@ export default function SettingPage() {
   });
 
   const versionSetting: SettingItem = {
-    label: `Current version: ${currentVersion}`,
-    description: latestRelease ? `Latest version: ${latestRelease.name}` : "",
+    label: `Software version: ${currentVersion}`,
+    description: latestRelease ? `Latest version: ${latestRelease.name}` : "-",
     actions: [
       <span key="updateSoftware">
         {getLatestReleaseLoading ? (
           <>
-            <LoadingOutlined /> Checking update...
+            <LoadingOutlined /> Checking update 🤔...
           </>
         ) : getLatestReleaseError ? (
-          "Failed on checking update"
+          "Failed on checking update 🫠"
         ) : latestRelease?.name === currentVersion ? (
-          "You are using the latest version"
+          "You are using the latest version 🥰"
         ) : (
           <Button
             type="link"
@@ -73,8 +73,8 @@ export default function SettingPage() {
     label: "Indexes stats",
     description:
       indexesSize > 0
-        ? `Size: ${(indexesSize / 1024 / 1024).toFixed(2)} MB`
-        : "Get stats of indexes files failed",
+        ? `Total size: ${(indexesSize / 1024 / 1024).toFixed(2)} MB`
+        : "Get total size of indexes files failed 😶‍🌫️",
     actions: [
       <Button
         key="openIndexesDirectory"
@@ -82,13 +82,13 @@ export default function SettingPage() {
         onClick={() => window.electronApi.openIndexesDirectory()}
         className="px-0"
       >
-        Open indexes directory
+        Open directory
       </Button>,
     ],
   };
 
   const workersSetting: SettingItem = {
-    label: "Workers",
+    label: "Max work processes",
     description: "Number of parallel processes used when updating indexes",
     actions: [
       <InputNumber
@@ -127,6 +127,7 @@ export default function SettingPage() {
         />
         <div className="mt-auto flex items-center justify-center pt-8 text-4xl">
           <GithubOutlined
+            className="transition-all hover:rotate-12"
             onClick={() =>
               window.electronApi.openExternalUrl(
                 "https://github.com/LolipopJ/dupimg-finder",
