@@ -4,7 +4,7 @@ import {
   LoadingOutlined,
 } from "@ant-design/icons";
 import { Button, Modal, Popconfirm } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SpawnEvents } from "../enums";
 import type { SpawnOptions } from "../interfaces";
@@ -13,13 +13,16 @@ import { useAppDispatch } from "../lib/hooks";
 
 const SPAWN_LOG_MAX_LENGTH = 2000;
 
-export const SpawnDialog = () => {
+export const SpawnDialog = ({ showTimer = true }: { showTimer?: boolean }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const [cancelable, setStoppable] = useState<boolean>(false);
   const [dialogTitle, setDialogTitle] = useState<string>("Spawn log");
   const [dialogContent, setDialogContent] = useState<string>("");
+  const [elapsedMs, setElapsedMs] = useState<number>(0);
+  const intervalRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   const dispatch = useAppDispatch();
 
@@ -34,6 +37,21 @@ export const SpawnDialog = () => {
         setDialogTitle(options.title);
         setDialogContent("");
         setOpen(true);
+        if (showTimer) {
+          const start = Date.now();
+          startTimeRef.current = start;
+          setElapsedMs(0);
+          if (intervalRef.current) {
+            window.clearInterval(intervalRef.current);
+          }
+          intervalRef.current = window.setInterval(() => {
+            const s = startTimeRef.current ?? start;
+            setElapsedMs(Date.now() - s);
+          }, 500);
+        } else {
+          startTimeRef.current = null;
+          setElapsedMs(0);
+        }
       },
     );
     const cleanupSpawnStdout = window.ipc.on(
@@ -81,6 +99,15 @@ export const SpawnDialog = () => {
         });
         if (code !== 0) setError(true);
         setLoading(false);
+        if (intervalRef.current) {
+          window.clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        const start = startTimeRef.current;
+        if (start) {
+          setElapsedMs(Date.now() - start);
+          startTimeRef.current = null;
+        }
       },
     );
 
@@ -89,8 +116,12 @@ export const SpawnDialog = () => {
       cleanupSpawnStdout();
       cleanupSpawnStderr();
       cleanupSpawnFinished();
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
-  }, []);
+  }, [showTimer]);
 
   const onClose = () => {
     if (!loading) {
@@ -103,7 +134,23 @@ export const SpawnDialog = () => {
       dispatch(cancelProcess());
       setLoading(false);
       setError(true);
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      startTimeRef.current = null;
     }
+  };
+
+  const formatElapsed = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
 
   return (
@@ -122,13 +169,18 @@ export const SpawnDialog = () => {
             )}
           </span>
           {dialogTitle}
+          {showTimer ? (
+            <span className="ml-2 font-mono text-sm text-stone-300">
+              {formatElapsed(elapsedMs)}
+            </span>
+          ) : null}
           {cancelable ? (
             <Popconfirm
               title="Are you sure to cancel the process?"
               onConfirm={onStop}
             >
               <Button
-                className="ml-2"
+                className="ml-4"
                 size="small"
                 type="link"
                 danger
