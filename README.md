@@ -39,16 +39,21 @@ Duplicate Images Finder supports indexing with multiple work processes, default 
 
 ## Develop
 
+You need to build the EfficientIR binary before running the frontend. The binary is located at `EfficientIR/dist/EfficientIR.exe` after building.
+
 ### Backend
 
-Python environment is required. Binary is built successfully on `python>=3.12`, other versions are not tested.
+Python environment is required. Binary is built successfully on `python >= 3.12`. For Windows, `Microsoft Visual C++ >= 14.0` is required.
 
 ```bash
+# Initialize submodule
 cd EfficientIR
 git submodule update --init
+# Create virtual environment and install dependencies
 python -m venv .venv
-.venv/Scripts/Activate.ps1 # for linux or macOS, use `source .venv/bin/activate`
+.venv/Scripts/Activate.ps1 # For Linux or macOS, use `source .venv/bin/activate`
 pip install -r requirements.txt
+# Build binary
 pyinstaller build.spec
 ```
 
