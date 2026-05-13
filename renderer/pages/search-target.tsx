@@ -239,7 +239,7 @@ export default function SearchTargetPage() {
           Search Duplicate Images of Target - Duplicate Images Finder
         </title>
       </Head>
-      <div>
+      <div className="flex h-full flex-col">
         <Form<SearchDupOptions>
           name="search-dup-options"
           initialValues={initialSearchDupOptions}
@@ -277,12 +277,15 @@ export default function SearchTargetPage() {
             <Popover
               trigger={targetImagePath ? ["hover"] : []}
               title="Target image"
-              overlayClassName="preview-image-card"
+              classNames={{ root: "preview-image-card" }}
+              placement="bottomRight"
               content={() => {
                 if (!targetImagePath) return null;
                 return (
                   <div>
-                    <code className="mb-2">{targetImagePath}</code>
+                    <code className="mb-2 whitespace-pre-wrap break-all">
+                      {targetImagePath}
+                    </code>
                     {renderImagePreviewWithErrorHandler(targetImagePath)}
                   </div>
                 );
@@ -305,6 +308,7 @@ export default function SearchTargetPage() {
           loading={loading}
           rowKey="key"
           scroll={{ x: true }}
+          rootClassName="h-full-table"
           pagination={{
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],

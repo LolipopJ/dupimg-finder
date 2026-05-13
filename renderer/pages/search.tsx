@@ -348,7 +348,7 @@ export default function SearchPage() {
       <Head>
         <title>Search Duplicate Images - Duplicate Images Finder</title>
       </Head>
-      <div>
+      <div className="flex h-full flex-col">
         <Form<SearchDupPairsOptions>
           name="search-dup-pairs-options"
           initialValues={initialSearchDupPairsOptions}
@@ -429,6 +429,7 @@ export default function SearchPage() {
           loading={loading}
           rowKey="key"
           scroll={{ x: true }}
+          rootClassName="h-full-table"
           expandable={{
             expandedRowKeys: searchDupPairsResExpandedRowKeys,
             expandRowByClick: true,

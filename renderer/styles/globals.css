@@ -115,4 +115,37 @@
       @apply max-w-80;
     }
   }
+
+  .h-full-table {
+    @apply flex-1 min-h-0 flex flex-col;
+  }
+
+  .h-full-table .ant-spin-nested-loading {
+    @apply flex-1 min-h-0 flex flex-col;
+  }
+
+  .h-full-table .ant-spin-container {
+    @apply flex-1 min-h-0 flex flex-col;
+  }
+
+  .h-full-table .ant-table {
+    @apply flex-1 min-h-0 flex flex-col;
+  }
+
+  .h-full-table .ant-table-container {
+    @apply flex-1 min-h-0 flex flex-col;
+  }
+
+  .h-full-table .ant-table-content {
+    @apply flex-1 min-h-0 !overflow-auto;
+  }
+
+  .h-full-table .ant-table-thead > tr > th,
+  .h-full-table .ant-table-thead > tr > td {
+    @apply sticky top-0 z-[2];
+  }
+
+  .h-full-table .ant-pagination {
+    @apply shrink-0 !mb-0;
+  }
 }

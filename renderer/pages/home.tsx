@@ -104,7 +104,7 @@ export default function HomePage() {
       <Head>
         <title>Indexes - Duplicate Images Finder</title>
       </Head>
-      <div>
+      <div className="flex h-full flex-col">
         <Space className="mb-4 w-full justify-end">
           <Button onClick={onAddIndex} icon={<FolderAddOutlined />}>
             ADD DIRECTORY
@@ -132,6 +132,7 @@ export default function HomePage() {
           columns={indexRecordTableColumns}
           dataSource={indexRecord}
           rowKey="path"
+          rootClassName="h-full-table"
         />
       </div>
     </>

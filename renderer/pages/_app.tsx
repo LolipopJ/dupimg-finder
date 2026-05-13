@@ -124,15 +124,17 @@ function App({ Component, pageProps }: AppProps) {
                   />
                 </Layout.Sider>
 
-                <Layout className="overflow-auto">
-                  <Layout.Content className="p-6">
+                <Layout className="h-full overflow-hidden">
+                  <Layout.Content className="flex h-full flex-col overflow-hidden p-6">
                     <SwitchTransition mode="out-in">
                       <CSSTransition
                         key={pathname}
                         timeout={150}
                         classNames="route-page"
                       >
-                        <Component {...pageProps} />
+                        <div className="h-full">
+                          <Component {...pageProps} />
+                        </div>
                       </CSSTransition>
                     </SwitchTransition>
                   </Layout.Content>
