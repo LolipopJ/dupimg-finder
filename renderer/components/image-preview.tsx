@@ -1,7 +1,14 @@
 import { Image, type ImageProps } from "antd";
-import { cloneElement, isValidElement } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 
 import {
+  deleteImage,
   type DeleteImageOptions,
   openImage,
   type OpenImageOptions,
@@ -32,6 +39,24 @@ export const ImagePreview = (props: ImagePreviewProps) => {
     imageProps,
   } = props;
 
+  const isHoveringRef = useRef(false);
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Delete" && isHoveringRef.current) {
+        deleteImage({ path, onDelete });
+      }
+    },
+    [path, onDelete],
+  );
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   const wrapWithDropdownMenu = (innerChildren: React.ReactNode) => {
     return (
       <ImageDropdownMenu
@@ -41,15 +66,23 @@ export const ImagePreview = (props: ImagePreviewProps) => {
         onReveal={onReveal}
         {...dropdownMenuProps}
       >
-        {innerChildren}
+        <div
+          onMouseEnter={() => {
+            isHoveringRef.current = true;
+          }}
+          onMouseLeave={() => {
+            isHoveringRef.current = false;
+          }}
+        >
+          {innerChildren}
+        </div>
       </ImageDropdownMenu>
     );
   };
 
   if (children && isValidElement(children)) {
     const clonedChildren = cloneElement(children, {
-      // @ts-expect-error: wrap children with `onClick`
-      onClick: async (event) => {
+      onClick: async (event: React.MouseEvent) => {
         await children.props.onClick?.(event);
         await openImage({ path, onOpen });
       },

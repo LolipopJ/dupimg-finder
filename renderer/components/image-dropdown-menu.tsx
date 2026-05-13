@@ -49,7 +49,7 @@ export const ImageDropdownMenu = (props: ImageDropdownMenuProps) => {
     <Dropdown
       menu={{ items: menuItems, onClick: onMenuItemClick }}
       trigger={["contextMenu"]}
-      destroyPopupOnHide
+      destroyOnHidden
       {...restProps}
     />
   );
