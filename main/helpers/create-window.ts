@@ -6,22 +6,31 @@ import {
 } from "electron";
 import Store from "electron-store";
 
+interface WindowState extends Rectangle {
+  isMaximized?: boolean;
+}
+
 export const createWindow = (
   windowName: string,
   options: BrowserWindowConstructorOptions,
 ): BrowserWindow => {
   const key = "window-state";
   const name = `window-state-${windowName}`;
-  const store = new Store<Rectangle>({ name });
+  const store = new Store<WindowState>({ name });
   const defaultSize = {
-    width: options.width,
-    height: options.height,
+    width: options.width ?? 800,
+    height: options.height ?? 600,
   };
-  let state = {};
+  let state: WindowState = {
+    width: 800,
+    height: 600,
+    x: 0,
+    y: 0,
+  };
 
-  const restore = () => store.get(key, defaultSize);
+  const restore = () => store.get(key, defaultSize) as WindowState;
 
-  const getCurrentPosition = () => {
+  const getCurrentPosition = (): WindowState => {
     const position = win.getPosition();
     const size = win.getSize();
     return {
@@ -32,7 +41,7 @@ export const createWindow = (
     };
   };
 
-  const windowWithinBounds = (windowState, bounds) => {
+  const windowWithinBounds = (windowState: WindowState, bounds: Rectangle) => {
     return (
       windowState.x >= bounds.x &&
       windowState.y >= bounds.y &&
@@ -49,7 +58,7 @@ export const createWindow = (
     });
   };
 
-  const ensureVisibleOnSomeDisplay = (windowState) => {
+  const ensureVisibleOnSomeDisplay = (windowState: WindowState) => {
     const visible = screen.getAllDisplays().some((display) => {
       return windowWithinBounds(windowState, display.bounds);
     });
@@ -65,20 +74,26 @@ export const createWindow = (
     if (!win.isMinimized() && !win.isMaximized()) {
       Object.assign(state, getCurrentPosition());
     }
+    state.isMaximized = win.isMaximized();
     store.set(key, state);
   };
 
-  state = ensureVisibleOnSomeDisplay(restore());
+  const { isMaximized, ...restoreState } = restore();
+  state = ensureVisibleOnSomeDisplay(restoreState);
 
   const win = new BrowserWindow({
-    ...state,
     ...options,
+    ...state,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
       ...options.webPreferences,
     },
   });
+
+  if (isMaximized) {
+    win.maximize();
+  }
 
   win.on("close", saveState);
 
