@@ -12,6 +12,7 @@ import {
   getEfficientIRConfig,
   getEfficientIRConfigFilePath,
   getEfficientIRIndexesDirectory,
+  killActiveProcesses,
   runExecSync,
   runSpawn,
   updateEfficientIRConfig,
@@ -50,6 +51,18 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
     if (process.platform === "win32") {
       mediaPath = mediaPath.replace("/", ":/");
     }
+
+    try {
+      mediaPath = path.normalize(decodeURIComponent(mediaPath));
+    } catch {
+      return new Response(null, { status: 400 });
+    }
+
+    const ext = path.extname(mediaPath).slice(1).toLowerCase();
+    if (!IMAGE_EXTENSIONS.includes(ext)) {
+      return new Response(null, { status: 403 });
+    }
+
     return net.fetch(mediaPath);
   });
   //#endregion
@@ -73,6 +86,10 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
   //#region app events
   app.on("window-all-closed", () => {
     app.quit();
+  });
+
+  app.on("before-quit", () => {
+    killActiveProcesses();
   });
   //#endregion
 

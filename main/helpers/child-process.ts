@@ -1,4 +1,4 @@
-import { execSync, spawn } from "child_process";
+import { type ChildProcess, execSync, spawn } from "child_process";
 import { type BrowserWindow } from "electron";
 import iconv from "iconv-lite";
 
@@ -8,6 +8,17 @@ import { SpawnOptions } from "../interfaces";
 const execEncoding = "binary";
 // Compatible with default command line encoding `cp936` on Windows platform
 const iconvDecoding = process.platform === "win32" ? "cp936" : "utf-8";
+
+// Tracks child processes started via `runSpawn` so they can be terminated
+// when the app quits, avoiding orphaned processes.
+const activeProcesses: Record<number, ChildProcess> = {};
+
+export const killActiveProcesses = () => {
+  Object.keys(activeProcesses).forEach((pid) => {
+    activeProcesses[Number(pid)].kill();
+    delete activeProcesses[Number(pid)];
+  });
+};
 
 export const runExecSync = (cmd: string) => {
   try {
@@ -26,6 +37,13 @@ export const runSpawn = (
   spawnOptions?: SpawnOptions,
 ) => {
   const process = spawn(cmd, args);
+  if (process.pid !== undefined) {
+    const pid = process.pid;
+    activeProcesses[pid] = process;
+    process.once("exit", () => {
+      delete activeProcesses[pid];
+    });
+  }
 
   if (browserWindow && spawnOptions) {
     browserWindow.webContents.send(SpawnEvents.SPAWN_STARTED, spawnOptions);
