@@ -19,11 +19,14 @@ interface GithubRelease {
 }
 
 export default function SettingPage() {
-  const currentVersion = window.electronApi.getSoftwareVersion();
-  const indexesSize = window.electronApi.getIndexesSize();
-
+  const [currentVersion] = useState<string>(
+    () => window.electronApi.getSoftwareVersion() ?? "",
+  );
+  const [indexesSize] = useState<number>(
+    () => window.electronApi.getIndexesSize() ?? 0,
+  );
   const [maxProcess, setMaxProcess] = useState<number>(
-    window.storeApi.getValue("max-process") ?? DEFAULT_MAX_PROCESS,
+    () => window.storeApi.getValue("max-process") ?? DEFAULT_MAX_PROCESS,
   );
 
   const {

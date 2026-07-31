@@ -49,29 +49,47 @@ const storeApi = {
 //#endregion
 
 //#region ElectronApi
-const fileStatsCache: Record<string, Stats | null> = {};
+// LRU cache: capped size to avoid unbounded growth over long sessions
+const FILE_STATS_CACHE_LIMIT = 2000;
+const fileStatsCache = new Map<string, Stats | null>();
+
+const setFileStatsCache = (path: string, stats: Stats | null) => {
+  fileStatsCache.delete(path);
+  fileStatsCache.set(path, stats);
+
+  if (fileStatsCache.size > FILE_STATS_CACHE_LIMIT) {
+    const oldestKey = fileStatsCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      fileStatsCache.delete(oldestKey);
+    }
+  }
+};
 
 const electronApi = {
-  getFilesStats: (paths: string[]): (Stats | null)[] => {
-    return paths.map((path) => {
-      try {
-        if (fileStatsCache[path]) {
-          return fileStatsCache[path];
+  getFilesStats: (paths: string[]): Promise<(Stats | null)[]> => {
+    return Promise.all(
+      paths.map(async (path) => {
+        if (fileStatsCache.has(path)) {
+          const cachedStats = fileStatsCache.get(path) ?? null;
+          setFileStatsCache(path, cachedStats); // refresh recency
+          return cachedStats;
         }
 
-        const fileStats = fs.statSync(path);
-        fileStatsCache[path] = fileStats;
+        try {
+          const fileStats = await fs.promises.stat(path);
+          setFileStatsCache(path, fileStats);
 
-        return fileStats;
-      } catch (error) {
-        console.warn(`Get stats of file \`${path}\` failed:`, error);
-        return null;
-      }
-    });
+          return fileStats;
+        } catch (error) {
+          console.warn(`Get stats of file \`${path}\` failed:`, error);
+          setFileStatsCache(path, null);
+
+          return null;
+        }
+      }),
+    );
   },
-  updateFileStatsCache: (path: string, stats: Stats | null) => {
-    fileStatsCache[path] = stats;
-  },
+  setFileStatsCache,
   selectDirectory: () =>
     ipcRenderer.invoke(
       ElectronEvents.SELECT_DIRECTORY,

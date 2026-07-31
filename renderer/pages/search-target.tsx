@@ -49,19 +49,21 @@ export default function SearchTargetPage() {
     const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
       // @ts-expect-error: override using defined types
-      (data: string, options: SpawnOptions) => {
+      async (data: string, options: SpawnOptions) => {
         if (options.key !== EfficientIREvents.SEARCH_DUP_IMG_OF_TARGET) return;
 
         try {
           const parsedRes: SearchDupRes[] = JSON.parse(data);
-          const parsedResRecord: SearchDupResRecord[] = parsedRes.map((res) => {
-            const [file] = window.electronApi.getFilesStats([res.path]);
-            return {
-              ...res,
-              file: file ? file : { isDeleted: true },
-              key: res.path,
-            };
-          });
+          const parsedResRecord: SearchDupResRecord[] = await Promise.all(
+            parsedRes.map(async (res) => {
+              const [file] = await window.electronApi.getFilesStats([res.path]);
+              return {
+                ...res,
+                file: file ? file : { isDeleted: true },
+                key: res.path,
+              };
+            }),
+          );
           dispatch(setSearchDupResValue(parsedResRecord));
         } catch (error) {
           console.error(
@@ -87,9 +89,12 @@ export default function SearchTargetPage() {
     };
   }, [dispatch]);
 
-  const initialSearchDupOptions: SearchDupOptions =
-    window.storeApi.getValue(CUSTOM_SEARCH_DUP_OPTIONS_KEY) ??
-    DEFAULT_SEARCH_DUP_OPTIONS;
+  const initialSearchDupOptions = useMemo<SearchDupOptions>(
+    () =>
+      window.storeApi.getValue(CUSTOM_SEARCH_DUP_OPTIONS_KEY) ??
+      DEFAULT_SEARCH_DUP_OPTIONS,
+    [],
+  );
 
   const onSearchDupImg: FormProps<SearchDupOptions>["onFinish"] = async (
     options,
@@ -101,7 +106,7 @@ export default function SearchTargetPage() {
       const path = selectFileRes.filePaths[0];
       setTargetImagePath(path);
 
-      const [stats] = window.electronApi.getFilesStats([path]);
+      const [stats] = await window.electronApi.getFilesStats([path]);
       setTargetImageStats(stats ?? { isDeleted: true });
 
       window.storeApi.setValue(CUSTOM_SEARCH_DUP_OPTIONS_KEY, options);
@@ -116,7 +121,7 @@ export default function SearchTargetPage() {
         dispatch(
           updateSearchDupResFileStats({ path, stats: { isDeleted: true } }),
         );
-        window.electronApi.updateFileStatsCache(path, null);
+        window.electronApi.setFileStatsCache(path, null);
       };
 
       return (

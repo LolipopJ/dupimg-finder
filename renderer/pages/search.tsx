@@ -74,14 +74,14 @@ export default function SearchPage() {
     const cleanupSpawnStdout = window.ipc.on(
       SpawnEvents.SPAWN_STDOUT,
       // @ts-expect-error: override using defined types
-      (data: string, options: SpawnOptions) => {
+      async (data: string, options: SpawnOptions) => {
         if (options.key !== EfficientIREvents.SEARCH_DUP_PAIRS) return;
 
         try {
           const parsedRes: SearchDupPairsRes[] = JSON.parse(data);
-          const parsedResRecord: SearchDupPairsResRecord[] = parsedRes.map(
-            (res) => {
-              const [fileA, fileB] = window.electronApi.getFilesStats([
+          const parsedResRecord: SearchDupPairsResRecord[] = await Promise.all(
+            parsedRes.map(async (res) => {
+              const [fileA, fileB] = await window.electronApi.getFilesStats([
                 res.path_a,
                 res.path_b,
               ]);
@@ -91,7 +91,7 @@ export default function SearchPage() {
                 fileB: fileB ? fileB : { isDeleted: true },
                 key: `${res.path_a}-${res.path_b}`,
               };
-            },
+            }),
           );
           dispatch(setSearchDupPairsResValue(parsedResRecord));
         } catch (error) {
@@ -137,9 +137,12 @@ export default function SearchPage() {
     };
   }, []);
 
-  const initialSearchDupPairsOptions: SearchDupPairsOptions =
-    window.storeApi.getValue(CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY) ??
-    DEFAULT_SEARCH_DUP_PAIRS_OPTIONS;
+  const initialSearchDupPairsOptions = useMemo<SearchDupPairsOptions>(
+    () =>
+      window.storeApi.getValue(CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY) ??
+      DEFAULT_SEARCH_DUP_PAIRS_OPTIONS,
+    [],
+  );
 
   useEffect(() => {
     if (!router.isReady || !router.query.autoSearch) return;
@@ -167,7 +170,7 @@ export default function SearchPage() {
             stats: { isDeleted: true },
           }),
         );
-        window.electronApi.updateFileStatsCache(path, null);
+        window.electronApi.setFileStatsCache(path, null);
       };
 
       return (
