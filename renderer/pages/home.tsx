@@ -20,8 +20,10 @@ import { EfficientIREvents, SpawnEvents } from "../enums";
 import type { IndexRecord, SpawnOptions } from "../interfaces";
 import {
   addIndexRecord,
+  rejectIndexUpdate,
   removeIndexRecord,
-  updateIndexRecord,
+  requestIndexUpdate,
+  resolveIndexUpdate,
   type UpdateIndexRecordPayload,
 } from "../lib/features/config/configSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
@@ -44,9 +46,14 @@ export default function HomePage() {
       SpawnEvents.SPAWN_FINISHED,
       // @ts-expect-error: override using defined types
       (code: number, options: SpawnOptions) => {
-        if (!UPDATE_INDEX_EVENT_KEYS.includes(options.key) || code !== 0)
-          return;
+        if (!UPDATE_INDEX_EVENT_KEYS.includes(options.key)) return;
 
+        if (code !== 0) {
+          dispatch(rejectIndexUpdate());
+          return;
+        }
+
+        dispatch(resolveIndexUpdate());
         Modal.confirm({
           title: "Index Updated Successfully",
           content:
@@ -63,7 +70,7 @@ export default function HomePage() {
     return () => {
       cleanupSpawnFinished();
     };
-  }, [router]);
+  }, [dispatch, router]);
 
   const onAddIndex = () => {
     window.electronApi.selectDirectory().then((res) => {
@@ -80,7 +87,7 @@ export default function HomePage() {
     checkMeta,
   }: UpdateIndexRecordPayload = {}) => {
     setUpdateIndexRecordLoading(true);
-    dispatch(updateIndexRecord({ dirs, checkMeta }));
+    dispatch(requestIndexUpdate({ dirs, checkMeta }));
     setUpdateIndexRecordLoading(false);
   };
 

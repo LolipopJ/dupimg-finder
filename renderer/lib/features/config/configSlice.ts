@@ -1,6 +1,10 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 import type { EfficientIRConfig, IndexRecord } from "../../../interfaces";
+import {
+  deleteStoreRecordKeys,
+  mergeStoreRecord,
+} from "../../../utils/storeRecord";
 
 const initialState = {
   config: {
@@ -13,6 +17,8 @@ const initialState = {
     search_dir: [],
   } as EfficientIRConfig,
   indexRecord: [] as IndexRecord[],
+  /** Dirs whose index update is currently in-flight, awaiting `SPAWN_FINISHED`. */
+  pendingUpdateDirs: null as IndexRecord["path"][] | null,
 };
 
 const INDEX_LAST_UPDATED_KEY = "index-state-last-updated";
@@ -28,8 +34,9 @@ export const configSlice = createSlice({
   reducers: {
     refreshConfig: (state) => {
       const config = window.efficientIRApi.getConfig();
-      const indexLastUpdatedRecord =
-        window.storeApi.getValue(INDEX_LAST_UPDATED_KEY) ?? {};
+      const indexLastUpdatedRecord = window.storeApi.getValue(
+        INDEX_LAST_UPDATED_KEY,
+      );
 
       state.config = config;
       state.indexRecord = config.search_dir.map(
@@ -72,25 +79,17 @@ export const configSlice = createSlice({
         JSON.parse(JSON.stringify(state.config)),
       );
 
-      const indexLastUpdatedRecord =
-        window.storeApi.getValue(INDEX_LAST_UPDATED_KEY) ?? {};
-      action.payload.map((path) => {
-        delete indexLastUpdatedRecord[path];
-      });
-      window.storeApi.setValue(INDEX_LAST_UPDATED_KEY, indexLastUpdatedRecord);
+      deleteStoreRecordKeys(INDEX_LAST_UPDATED_KEY, action.payload);
     },
-    updateIndexRecord: (
+    /**
+     * Requests an index update for `dirs` (or all indexed dirs when omitted).
+     * `lastUpdated` is only committed once `resolveIndexUpdate` is dispatched
+     * in response to a successful `SPAWN_FINISHED`.
+     */
+    requestIndexUpdate: (
       state,
-      /**
-       * When passed parameter is of `Array` type, update target index records.
-       * Otherwise, update all index records.
-       */
       action: PayloadAction<UpdateIndexRecordPayload>,
     ) => {
-      const currentDateLocaleString = new Date().toLocaleString();
-      const indexLastUpdatedRecord =
-        window.storeApi.getValue(INDEX_LAST_UPDATED_KEY) ?? {};
-
       const { dirs = [], checkMeta = false } = action.payload;
       const isUpdateAllIndex = dirs.length === 0;
       if (isUpdateAllIndex) {
@@ -99,15 +98,31 @@ export const configSlice = createSlice({
         window.efficientIRApi.updateIndex(dirs, { checkMeta });
       }
 
-      state.indexRecord = state.indexRecord.map((record) => {
-        const path = record.path;
-        if (isUpdateAllIndex || dirs.includes(path)) {
-          record.lastUpdated = currentDateLocaleString;
-          indexLastUpdatedRecord[path] = currentDateLocaleString;
-        }
-        return record;
-      });
-      window.storeApi.setValue(INDEX_LAST_UPDATED_KEY, indexLastUpdatedRecord);
+      state.pendingUpdateDirs = isUpdateAllIndex
+        ? state.indexRecord.map((record) => record.path)
+        : dirs;
+    },
+    /** Commits pending dirs as updated. Call only after a successful `SPAWN_FINISHED`. */
+    resolveIndexUpdate: (state) => {
+      const pendingDirs = state.pendingUpdateDirs ?? [];
+      if (pendingDirs.length === 0) return;
+
+      const currentDateLocaleString = new Date().toLocaleString();
+      const updates = Object.fromEntries(
+        pendingDirs.map((path) => [path, currentDateLocaleString]),
+      );
+      mergeStoreRecord(INDEX_LAST_UPDATED_KEY, updates);
+
+      state.indexRecord = state.indexRecord.map((record) =>
+        pendingDirs.includes(record.path)
+          ? { ...record, lastUpdated: currentDateLocaleString }
+          : record,
+      );
+      state.pendingUpdateDirs = null;
+    },
+    /** Discards pending update tracking after a failed/cancelled `SPAWN_FINISHED`. */
+    rejectIndexUpdate: (state) => {
+      state.pendingUpdateDirs = null;
     },
     cancelProcess: () => {
       window.efficientIRApi.cancelProcess();
@@ -119,7 +134,9 @@ export const {
   refreshConfig,
   addIndexRecord,
   removeIndexRecord,
-  updateIndexRecord,
+  requestIndexUpdate,
+  resolveIndexUpdate,
+  rejectIndexUpdate,
   cancelProcess,
 } = configSlice.actions;
 
