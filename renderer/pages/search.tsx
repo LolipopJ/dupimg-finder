@@ -18,6 +18,7 @@ import {
   Tooltip,
 } from "antd";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import ImagePreview from "../components/image-preview";
@@ -40,6 +41,8 @@ import { useAppDispatch, useAppSelector } from "../lib/hooks";
 const CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY = "custom-search-dup-pairs-options";
 
 export default function SearchPage() {
+  const [form] = Form.useForm<SearchDupPairsOptions>();
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [hideIgnoredPairs, setHideIgnoredPairs] = useState<boolean>(true);
   const [
@@ -137,6 +140,13 @@ export default function SearchPage() {
   const initialSearchDupPairsOptions: SearchDupPairsOptions =
     window.storeApi.getValue(CUSTOM_SEARCH_DUP_PAIRS_OPTIONS_KEY) ??
     DEFAULT_SEARCH_DUP_PAIRS_OPTIONS;
+
+  useEffect(() => {
+    if (!router.isReady || !router.query.autoSearch) return;
+
+    form.submit();
+    router.replace("/search", undefined, { shallow: true });
+  }, [form, router, router.isReady, router.query.autoSearch]);
 
   const onSearchDupPairs: FormProps<SearchDupPairsOptions>["onFinish"] = (
     options,
@@ -350,6 +360,7 @@ export default function SearchPage() {
       </Head>
       <div className="flex h-full flex-col">
         <Form<SearchDupPairsOptions>
+          form={form}
           name="search-dup-pairs-options"
           initialValues={initialSearchDupPairsOptions}
           onFinish={onSearchDupPairs}

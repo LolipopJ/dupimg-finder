@@ -6,15 +6,18 @@ import {
 import {
   Button,
   Dropdown,
+  Modal,
   Popconfirm,
   Space,
   Table,
   type TableColumnsType,
 } from "antd";
 import Head from "next/head";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-import type { IndexRecord } from "../interfaces";
+import { EfficientIREvents, SpawnEvents } from "../enums";
+import type { IndexRecord, SpawnOptions } from "../interfaces";
 import {
   addIndexRecord,
   removeIndexRecord,
@@ -23,12 +26,44 @@ import {
 } from "../lib/features/config/configSlice";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
 
+const UPDATE_INDEX_EVENT_KEYS: string[] = [
+  EfficientIREvents.UPDATE_INDEX,
+  EfficientIREvents.UPDATE_ALL_INDEX,
+];
+
 export default function HomePage() {
   const [updateIndexRecordLoading, setUpdateIndexRecordLoading] =
     useState<boolean>(false);
 
   const indexRecord = useAppSelector((state) => state.config.indexRecord);
   const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  useEffect(() => {
+    const cleanupSpawnFinished = window.ipc.on(
+      SpawnEvents.SPAWN_FINISHED,
+      // @ts-expect-error: override using defined types
+      (code: number, options: SpawnOptions) => {
+        if (!UPDATE_INDEX_EVENT_KEYS.includes(options.key) || code !== 0)
+          return;
+
+        Modal.confirm({
+          title: "Index Updated Successfully",
+          content:
+            "Would you like to navigate to the Search Duplicate Images page and start searching automatically?",
+          okText: "Yes",
+          cancelText: "Not now",
+          onOk: () => {
+            router.push({ pathname: "/search", query: { autoSearch: "1" } });
+          },
+        });
+      },
+    );
+
+    return () => {
+      cleanupSpawnFinished();
+    };
+  }, [router]);
 
   const onAddIndex = () => {
     window.electronApi.selectDirectory().then((res) => {
