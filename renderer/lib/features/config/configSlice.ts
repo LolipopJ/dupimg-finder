@@ -124,6 +124,14 @@ export const configSlice = createSlice({
     rejectIndexUpdate: (state) => {
       state.pendingUpdateDirs = null;
     },
+    clearIndexUpdateHistory: (state) => {
+      window.storeApi.setValue(INDEX_LAST_UPDATED_KEY, {});
+      state.indexRecord = state.indexRecord.map((record) => ({
+        ...record,
+        lastUpdated: undefined,
+      }));
+      state.pendingUpdateDirs = null;
+    },
     cancelProcess: () => {
       window.efficientIRApi.cancelProcess();
     },
@@ -137,6 +145,7 @@ export const {
   requestIndexUpdate,
   resolveIndexUpdate,
   rejectIndexUpdate,
+  clearIndexUpdateHistory,
   cancelProcess,
 } = configSlice.actions;
 

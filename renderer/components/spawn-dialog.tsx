@@ -8,8 +8,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { SpawnEvents } from "../enums";
 import type { SpawnOptions } from "../interfaces";
-import { cancelProcess } from "../lib/features/config/configSlice";
-import { useAppDispatch } from "../lib/hooks";
 
 const SPAWN_LOG_MAX_LENGTH = 2000;
 
@@ -18,13 +16,13 @@ export const SpawnDialog = ({ showTimer = true }: { showTimer?: boolean }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const [cancelable, setStoppable] = useState<boolean>(false);
+  const [cancelling, setCancelling] = useState<boolean>(false);
+  const [cancelled, setCancelled] = useState<boolean>(false);
   const [dialogTitle, setDialogTitle] = useState<string>("Spawn log");
   const [dialogContent, setDialogContent] = useState<string>("");
   const [elapsedMs, setElapsedMs] = useState<number>(0);
   const intervalRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
-
-  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const cleanupSpawnStarted = window.ipc.on(
@@ -33,6 +31,8 @@ export const SpawnDialog = ({ showTimer = true }: { showTimer?: boolean }) => {
       (options: SpawnOptions) => {
         setLoading(true);
         setError(false);
+        setCancelling(false);
+        setCancelled(false);
         setStoppable(!!options.cancelable);
         setDialogTitle(options.title);
         setDialogContent("");
@@ -98,6 +98,8 @@ export const SpawnDialog = ({ showTimer = true }: { showTimer?: boolean }) => {
           return `Spawn closed with code: ${code}` + "\n" + prevContent;
         });
         if (code !== 0) setError(true);
+        setCancelling(false);
+        setCancelled(code === 130);
         setLoading(false);
         if (intervalRef.current) {
           window.clearInterval(intervalRef.current);
@@ -129,16 +131,18 @@ export const SpawnDialog = ({ showTimer = true }: { showTimer?: boolean }) => {
     }
   };
 
-  const onStop = () => {
-    if (loading) {
-      dispatch(cancelProcess());
-      setLoading(false);
-      setError(true);
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
+  const onStop = async () => {
+    if (loading && !cancelling) {
+      setCancelling(true);
+      try {
+        const error = await window.efficientIRApi.cancelProcess();
+        if (error) throw new Error(error);
+      } catch (error) {
+        setCancelling(false);
+        setDialogContent(
+          (content) => `Cancellation failed: ${error}\n${content}`,
+        );
       }
-      startTimeRef.current = null;
     }
   };
 
@@ -184,9 +188,17 @@ export const SpawnDialog = ({ showTimer = true }: { showTimer?: boolean }) => {
                 size="small"
                 type="link"
                 danger
-                disabled={!loading}
+                disabled={!loading || cancelling}
               >
-                {loading ? "CANCEL" : error ? "CANCELED" : "FULFILLED"}
+                {loading
+                  ? cancelling
+                    ? "CANCELLING"
+                    : "CANCEL"
+                  : cancelled
+                    ? "CANCELED"
+                    : error
+                      ? "FAILED"
+                      : "FULFILLED"}
               </Button>
             </Popconfirm>
           ) : null}

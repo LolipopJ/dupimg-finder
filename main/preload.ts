@@ -114,6 +114,8 @@ const electronApi = {
     ipcRenderer.invoke(
       ElectronEvents.OPEN_INDEXES_DIRECTORY,
     ) as Promise<string>,
+  deleteIndexes: () =>
+    ipcRenderer.invoke(ElectronEvents.DELETE_INDEXES) as Promise<string>,
 };
 //#endregion
 
@@ -155,7 +157,9 @@ const efficientIRApi = {
     ipcRenderer.send(EfficientIREvents.UPDATE_ALL_INDEX, args);
   },
   cancelProcess: () => {
-    ipcRenderer.send(EfficientIREvents.CANCEL_PROCESS);
+    return ipcRenderer.invoke(
+      EfficientIREvents.CANCEL_PROCESS,
+    ) as Promise<string>;
   },
   searchDupPairs: (options?: SearchDupPairsOptions) => {
     const { threshold, sameDir } = options ?? DEFAULT_SEARCH_DUP_PAIRS_OPTIONS;

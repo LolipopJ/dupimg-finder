@@ -13,6 +13,7 @@ export enum ElectronEvents {
   GET_SOFTWARE_VERSION = "electron:getSoftwareVersion",
   GET_INDEXES_SIZE = "electron:getIndexesSize",
   OPEN_INDEXES_DIRECTORY = "electron:openIndexesDirectory",
+  DELETE_INDEXES = "electron:deleteIndexes",
 }
 
 export enum EfficientIREvents {

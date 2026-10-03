@@ -1,11 +1,15 @@
 import { GithubOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useRequest } from "ahooks";
-import { Button, InputNumber, List } from "antd";
+import { Button, InputNumber, List, message, Modal } from "antd";
 import axios from "axios";
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DEFAULT_MAX_PROCESS, MIN_MAX_PROCESS } from "../constants";
+import { clearIndexUpdateHistory } from "../lib/features/config/configSlice";
+import { useAppDispatch } from "../lib/hooks";
+
+const DELETE_INDEXES_COUNTDOWN_SECONDS = 5;
 
 interface SettingItem {
   label: React.ReactNode;
@@ -22,12 +26,46 @@ export default function SettingPage() {
   const [currentVersion] = useState<string>(
     () => window.electronApi.getSoftwareVersion() ?? "",
   );
-  const [indexesSize] = useState<number>(
+  const [indexesSize, setIndexesSize] = useState<number>(
     () => window.electronApi.getIndexesSize() ?? 0,
   );
   const [maxProcess, setMaxProcess] = useState<number>(
     () => window.storeApi.getValue("max-process") ?? DEFAULT_MAX_PROCESS,
   );
+  const [deleteIndexesOpen, setDeleteIndexesOpen] = useState(false);
+  const [deleteCountdown, setDeleteCountdown] = useState(
+    DELETE_INDEXES_COUNTDOWN_SECONDS,
+  );
+  const [deletingIndexes, setDeletingIndexes] = useState(false);
+  const [messageApi, messageContextHolder] = message.useMessage();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!deleteIndexesOpen || deleteCountdown === 0) return;
+    const timer = window.setTimeout(() => {
+      setDeleteCountdown((seconds) => seconds - 1);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [deleteIndexesOpen, deleteCountdown]);
+
+  const onDeleteIndexes = async () => {
+    if (!deleteIndexesOpen || deleteCountdown > 0 || deletingIndexes) return;
+    setDeletingIndexes(true);
+    try {
+      const error = await window.electronApi.deleteIndexes();
+      if (error) throw new Error(error);
+      dispatch(clearIndexUpdateHistory());
+      setDeleteIndexesOpen(false);
+      messageApi.success(
+        "Indexes deleted. Update indexes before searching again.",
+      );
+    } catch (error) {
+      messageApi.error(`Failed to delete indexes: ${String(error)}`);
+    } finally {
+      setIndexesSize(window.electronApi.getIndexesSize());
+      setDeletingIndexes(false);
+    }
+  };
 
   const {
     data: latestRelease,
@@ -74,10 +112,7 @@ export default function SettingPage() {
 
   const indexesDirectorySetting: SettingItem = {
     label: "Indexes stats",
-    description:
-      indexesSize > 0
-        ? `Total size: ${(indexesSize / 1024 / 1024).toFixed(2)} MB`
-        : "Get total size of indexes files failed 😶‍🌫️",
+    description: `Total size: ${(indexesSize / 1024 / 1024).toFixed(2)} MB`,
     actions: [
       <Button
         key="openIndexesDirectory"
@@ -86,6 +121,19 @@ export default function SettingPage() {
         className="px-0"
       >
         Open directory
+      </Button>,
+      <Button
+        key="deleteIndexes"
+        type="link"
+        danger
+        disabled={deletingIndexes}
+        onClick={() => {
+          setDeleteCountdown(DELETE_INDEXES_COUNTDOWN_SECONDS);
+          setDeleteIndexesOpen(true);
+        }}
+        className="px-0"
+      >
+        Delete indexes
       </Button>,
     ],
   };
@@ -111,9 +159,43 @@ export default function SettingPage() {
 
   return (
     <>
+      {messageContextHolder}
       <Head>
         <title>Setting - Duplicate Images Finder</title>
       </Head>
+      <Modal
+        title="Delete all indexes?"
+        open={deleteIndexesOpen}
+        onOk={onDeleteIndexes}
+        onCancel={() => {
+          if (!deletingIndexes) setDeleteIndexesOpen(false);
+        }}
+        okText={
+          deleteCountdown > 0
+            ? `Delete indexes (${deleteCountdown}s)`
+            : "Delete indexes"
+        }
+        cancelText="Cancel"
+        okButtonProps={{
+          danger: true,
+          disabled: deleteCountdown > 0 || deletingIndexes,
+        }}
+        confirmLoading={deletingIndexes}
+        cancelButtonProps={{ disabled: deletingIndexes }}
+        closable={!deletingIndexes}
+        maskClosable={!deletingIndexes}
+        keyboard={!deletingIndexes}
+      >
+        <p>
+          This will permanently delete index.bin and combined_index.json from
+          the application&apos;s index directory. Your images and configured
+          directories will be kept.
+        </p>
+        <p className="mt-2">
+          You will need to update indexes before searching again. Please wait
+          five seconds before confirming.
+        </p>
+      </Modal>
       <div className="mx-auto flex h-full min-w-96 max-w-[960px] flex-col">
         <List<SettingItem>
           itemLayout="horizontal"

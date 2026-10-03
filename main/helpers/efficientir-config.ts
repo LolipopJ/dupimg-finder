@@ -5,6 +5,7 @@ import path from "path";
 import {
   EFFICIENTIR_CONFIG_FILENAME,
   EFFICIENTIR_DEFAULT_CONFIG_PATH,
+  EFFICIENTIR_DIR_PATH,
   EFFICIENTIR_INDEXES_DIRNAME,
 } from "../constants";
 import type { EfficientIRConfig } from "../interfaces";
@@ -15,6 +16,23 @@ export const getEfficientIRConfigFilePath = () => {
 
 export const getEfficientIRIndexesDirectory = () => {
   return path.join(app.getPath("userData"), EFFICIENTIR_INDEXES_DIRNAME);
+};
+
+export const deleteEfficientIRIndexes = () => {
+  const indexesDirectory = getEfficientIRIndexesDirectory();
+  for (const filename of ["index.bin", "combined_index.json"]) {
+    fs.rmSync(path.join(indexesDirectory, filename), { force: true });
+  }
+};
+
+export const getEfficientIRStopFlagPath = () => {
+  const configuredPath: unknown = Reflect.get(
+    getEfficientIRConfig(),
+    "stop_flag_path",
+  );
+  return typeof configuredPath === "string"
+    ? path.resolve(EFFICIENTIR_DIR_PATH, configuredPath)
+    : path.join(app.getPath("userData"), "process.stop");
 };
 
 export const getEfficientIRConfig = () => {

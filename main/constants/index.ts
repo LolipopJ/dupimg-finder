@@ -18,7 +18,25 @@ export const EFFICIENTIR_CONFIG_FILENAME = "efficientir-config.json";
 
 export const EFFICIENTIR_INDEXES_DIRNAME = "index";
 
-export const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "tiff", "bmp", "webp"];
+export const IMAGE_EXTENSIONS = [
+  "png",
+  "jpg",
+  "jpeg",
+  "jpe",
+  "jfif",
+  "tif",
+  "tiff",
+  "bmp",
+  "dib",
+  "webp",
+  "avif",
+  "tga",
+  "ico",
+  "pbm",
+  "pgm",
+  "ppm",
+  "pnm",
+];
 
 export const DEFAULT_SEARCH_DUP_OPTIONS: SearchDupOptions = {
   matchN: 5,

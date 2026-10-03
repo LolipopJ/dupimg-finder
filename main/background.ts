@@ -5,18 +5,26 @@ import fs from "fs";
 import path from "path";
 
 import { EFFICIENTIR_BINARY_PATH, IMAGE_EXTENSIONS } from "./constants";
-import { EfficientIREvents, ElectronEvents, StoreEvents } from "./enums";
+import {
+  EfficientIREvents,
+  ElectronEvents,
+  SpawnEvents,
+  StoreEvents,
+} from "./enums";
 import {
   calculateDirectorySize,
   createWindow,
+  deleteEfficientIRIndexes,
   getEfficientIRConfig,
   getEfficientIRConfigFilePath,
   getEfficientIRIndexesDirectory,
+  getEfficientIRStopFlagPath,
+  hasActiveProcesses,
   killActiveProcesses,
-  runExecSync,
   runSpawn,
   updateEfficientIRConfig,
 } from "./helpers";
+import type { SpawnOptions } from "./interfaces";
 
 const store = new Store();
 
@@ -41,6 +49,8 @@ if (isProd) {
 }
 const efficientIRConfigPath = getEfficientIRConfigFilePath();
 const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
+let activeIndexProcess: ReturnType<typeof runSpawn> | null = null;
+let activeStopFlagPath: string | null = null;
 
 (async () => {
   await app.whenReady();
@@ -94,6 +104,40 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
   //#endregion
 
   //#region ipcMain events
+  const startIndexUpdate = (args: string[], options: SpawnOptions) => {
+    if (activeIndexProcess) return;
+    try {
+      activeStopFlagPath = getEfficientIRStopFlagPath();
+      fs.rmSync(activeStopFlagPath, { force: true });
+      activeIndexProcess = runSpawn(
+        EFFICIENTIR_BINARY_PATH,
+        [...args, "--config_path", efficientIRConfigPath],
+        mainWindow,
+        options,
+        {
+          env: {
+            ...process.env,
+            EFFICIENTIR_CANCEL_PREPARED: "1",
+            EFFICIENTIR_STOP_FLAG_PATH: activeStopFlagPath,
+          },
+        },
+      );
+      activeIndexProcess.once("close", () => {
+        activeIndexProcess = null;
+        activeStopFlagPath = null;
+      });
+    } catch (error) {
+      activeStopFlagPath = null;
+      mainWindow.webContents.send(SpawnEvents.SPAWN_STARTED, options);
+      mainWindow.webContents.send(
+        SpawnEvents.SPAWN_STDERR,
+        String(error),
+        options,
+      );
+      mainWindow.webContents.send(SpawnEvents.SPAWN_FINISHED, 1, options);
+    }
+  };
+
   ipcMain.on(StoreEvents.SET_VALUE, (_, key, value) => {
     store.set(key, value);
   });
@@ -171,6 +215,18 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
     return await shell.openPath(efficientIRIndexesDirectory);
   });
 
+  ipcMain.handle(ElectronEvents.DELETE_INDEXES, () => {
+    if (activeIndexProcess || hasActiveProcesses()) {
+      return "Please wait for the index update or search to finish before deleting indexes.";
+    }
+    try {
+      deleteEfficientIRIndexes();
+      return "";
+    } catch (error) {
+      return String(error);
+    }
+  });
+
   ipcMain.on(EfficientIREvents.GET_CONFIG, (event) => {
     event.returnValue = getEfficientIRConfig();
   });
@@ -180,37 +236,32 @@ const efficientIRIndexesDirectory = getEfficientIRIndexesDirectory();
   });
 
   ipcMain.on(EfficientIREvents.UPDATE_INDEX, (_, args) => {
-    runSpawn(
-      EFFICIENTIR_BINARY_PATH,
-      [...args, `--config_path ${efficientIRConfigPath}`],
-      mainWindow,
-      {
-        key: EfficientIREvents.UPDATE_INDEX,
-        title: "Update Index",
-        pipe: "stderr",
-        cancelable: true,
-      },
-    );
+    startIndexUpdate(args, {
+      key: EfficientIREvents.UPDATE_INDEX,
+      title: "Update Index",
+      pipe: "stderr",
+      cancelable: true,
+    });
   });
 
   ipcMain.on(EfficientIREvents.UPDATE_ALL_INDEX, (_, args) => {
-    runSpawn(
-      EFFICIENTIR_BINARY_PATH,
-      [...args, `--config_path ${efficientIRConfigPath}`],
-      mainWindow,
-      {
-        key: EfficientIREvents.UPDATE_ALL_INDEX,
-        title: "Update All Index",
-        pipe: "stderr",
-        cancelable: true,
-      },
-    );
+    startIndexUpdate(args, {
+      key: EfficientIREvents.UPDATE_ALL_INDEX,
+      title: "Update All Index",
+      pipe: "stderr",
+      cancelable: true,
+    });
   });
 
-  ipcMain.on(EfficientIREvents.CANCEL_PROCESS, (event) => {
-    event.returnValue = runExecSync(
-      `${EFFICIENTIR_BINARY_PATH} --cancel_process`,
-    );
+  ipcMain.handle(EfficientIREvents.CANCEL_PROCESS, () => {
+    if (!activeIndexProcess || !activeStopFlagPath)
+      return "No index update is running.";
+    try {
+      fs.writeFileSync(activeStopFlagPath, "1");
+      return "";
+    } catch (error) {
+      return String(error);
+    }
   });
 
   ipcMain.on(EfficientIREvents.SEARCH_DUP_PAIRS, (_, args) => {
